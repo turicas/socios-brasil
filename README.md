@@ -10,17 +10,21 @@ extrai e converte para CSV. [Veja mais detalhes](http://dados.gov.br/noticia/gov
 
 **[Acesse diretamente os dados
 convertidos](https://drive.google.com/open?id=1o2q2FxK9RecbwrhYxlXj25qWJHh2guhi)**
-caso você não queira/possa rodar o script (os CSVs estão na pasta "output").
-Esses dados foram baixados e convertidos em 31 de janeiro de 2018.
+caso você não queira/possa rodar o script (esses dados foram baixados e
+convertidos em 31 de janeiro de 2018). Na pasta "output" você encontrará,
+compactados:
+
+- Um arquivo por unidade federativa;
+- Arquivo `Brasil.csv`, com todos os dados consolidados;
+- Arquivo `socios-brasil.sqlite` - arquivo acima convertido para SQLite, para
+  facilitar consultas.
+
+Cada registro dos arquivos acima representa um sócio.
 
 Os dados originalmente estão em um formato [fixed-width
 file](http://www.softinterface.com/Convert-XLS/Features/Fixed-Width-Text-File-Definition.htm)
 e cada linha possui um tipo diferente de registro (empresa ou sócio), que
 dificulta as análises.
-
-A saída dos dados é um CSV por unidade federativa, em que cada linha do CSV
-representa um sócio. Além disso, para facilitar as análises, foi criado um
-arquivo CSV com dados de todo o Brasil.
 
 O campo de qualificação do sócio foi definido com base [na tabela
 disponibilizada pela Receita
@@ -89,4 +93,11 @@ Para gerar o `output/Brasil.csv`, execute:
 
 ```bash
 python3 socios.py merge-all
+```
+
+Para gerar a base de dados SQLite (facilita consultas), rode o seguinte
+comando:
+
+```bash
+python3 csv2sqlite.py
 ```
