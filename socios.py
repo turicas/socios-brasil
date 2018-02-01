@@ -143,9 +143,10 @@ def convert_all(wildcard, output_path):
 
 def merge_all(wildcard, output):
     output = Path(output)
+    header = list(HEADER) + ['unidade_federativa']
 
     with open(output, mode='w', encoding='utf8') as fobj:
-        writer = csv.DictWriter(fobj, fieldnames=HEADER, lineterminator='\n')
+        writer = csv.DictWriter(fobj, fieldnames=header, lineterminator='\n')
         writer.writeheader()
 
         for filename in glob.glob(wildcard):
@@ -153,9 +154,11 @@ def merge_all(wildcard, output):
                 continue
 
             print(f'Merging {filename}...')
+            unidade_federativa = Path(filename).name.replace('.csv', '')
             with open(filename, encoding='utf8') as fobj_uf:
                 reader = csv.DictReader(fobj_uf)
                 for row in reader:
+                    row['unidade_federativa'] = unidade_federativa
                     writer.writerow(row)
 
 
