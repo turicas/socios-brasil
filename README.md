@@ -101,3 +101,34 @@ comando:
 ```bash
 python3 csv2sqlite.py
 ```
+ ### Downloads
+ 
+ Previsão de tamanhos dos arquivos a serem puxados (atualizado em **2018-2-1**):
+ 
+* Acre: 8013978 (7,6M) 
+* Alagoas: 32437339 (31M)
+* Amapá:  8404764 (8,0M)
+* Amazonas:  35411591 (34M)
+* Bahia: 231116303 (220M) 
+* Ceará: 104380545 (100M)
+* Distrito Federal:  107598131 (103M) 
+* Espírito Santo: 101900028 (97M)
+* Goiás : 181131794 (173M)
+* Maranhão: 62187690 (59M)
+* Mato Grosso: 77130002 (74M)
+* Mato Grosso do Sul: 55749271 (53M) 
+* Minas Gerais: 549952985 (524M)
+* Pará:  82718853 (79M)
+* Paraíba: 41613361 (40M)
+* Paraná: 401246497 (383M)
+* Pernambuco: 124284464 (119M)
+* Piauí: 31827285 (30M) 
+* Rio de Janeiro: 487426461 (465M)
+* Rio Grande do Norte: 44115843 (42M)
+* Rio Grande do Sul: 385868132 (368M)
+* Rondônia: 32882369 (31M)
+* Roraima: 6426195 (6,1M)
+* Santa Catarina: 281316642 (268M)
+* São Paulo: 1588432400 (1,5G)
+* Sergipe:  33880344 (32M)
+* Tocantins:  27034140 (26M)
