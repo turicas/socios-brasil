@@ -101,3 +101,8 @@ comando:
 ```bash
 python3 csv2sqlite.py
 ```
+Informações da Receita Federal: 
+Segundo a assessoria de imprensa da Receita Federal do Brasil, a lista de CNPJs não tem ainda registro de todas as empresas do país. A Receita disponibilizou somente os tipos societários que possuem Quadro de  Sócios  e  Administradores. Empresas como as MEI, por exemplo, ainda não constam na lista.
+A pesquisa está atualizada até o dia 15/12/2017, a data consta ao final  da  tabela.  A previsão da Receita é atualizar a lista a cada seis meses.
+Ainda segundo o fisco, a lista divulgada tem somente companhias na situação Cadastral Ativa. 
+O órgão informou que não divulgará CPF dos sócios. Somente o nome dos sócios será fornecido. Caso seja um sócio PJ, será fornecido o número do CNPJ deste "sócio" PJ.
