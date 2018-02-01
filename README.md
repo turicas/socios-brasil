@@ -64,8 +64,10 @@ Criando o script que baixa os arquivos:
 python3 socios.py create-download-script
 ```
 
-Após executar, um arquivo `download.sh` será criado. Rode-o (necessita de wget
-instalado - testado apenas em Debian GNU/Linux):
+Após executar, um arquivo `download.sh` será criado. Esse script precisa do
+`wget` instalado (que é o padrão em distribuições GNU/Linux - caso use MacOS,
+instale-o rodando `brew install wget`). Rode o script para baixar todos os
+arquivos de sócios da Receita Federal:
 
 ```bash
 sh download.sh
