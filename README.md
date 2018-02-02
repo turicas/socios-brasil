@@ -65,7 +65,7 @@ python3 socios.py create-download-script
 ```
 
 Após executar, um arquivo `download.sh` será criado. Rode-o (necessita de wget
-instalado - testado apenas em Debian GNU/Linux):
+instalado - testado apenas em Debian GNU/Linux. No macOS, basta instalar o wget pelo brew install wget):
 
 ```bash
 sh download.sh
