@@ -101,3 +101,36 @@ comando:
 ```bash
 python3 csv2sqlite.py
 ```
+ ### Downloads
+
+Previsão de tamanhos dos arquivos a serem baixados (atualizado em 2018-02-01):
+
+- Acre: 8013978 (7,6 MB)
+- Alagoas: 32437339 (31 MB)
+- Amapá:  8404764 (8,0 MB)
+- Amazonas:  35411591 (34 MB)
+- Bahia: 231116303 (220 MB)
+- Ceará: 104380545 (100 MB)
+- Distrito Federal:  107598131 (103 MB)
+- Espírito Santo: 101900028 (97 MB)
+- Goiás : 181131794 (173 MB)
+- Maranhão: 62187690 (59 MB)
+- Mato Grosso: 77130002 (74 MB)
+- Mato Grosso do Sul: 55749271 (53 MB)
+- Minas Gerais: 549952985 (524 MB)
+- Pará:  82718853 (79 MB)
+- Paraíba: 41613361 (40 MB)
+- Paraná: 401246497 (383 MB)
+- Pernambuco: 124284464 (119 MB)
+- Piauí: 31827285 (30 MB)
+- Rio de Janeiro: 487426461 (465 MB)
+- Rio Grande do Norte: 44115843 (42 MB)
+- Rio Grande do Sul: 385868132 (368 MB)
+- Rondônia: 32882369 (31 MB)
+- Roraima: 6426195 (6,1 MB)
+- Santa Catarina: 281316642 (268 MB)
+- São Paulo: 1588432400 (1,5 GB)
+- Sergipe:  33880344 (32 MB)
+- Tocantins:  27034140 (26 MB)
+
+Total: 4,8 GB.
