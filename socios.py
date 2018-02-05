@@ -19,6 +19,35 @@ TIPOS_PESSOAS = {
 }
 QUALIFICACOES = {f'{row.codigo:02d}': row.descricao
                  for row in rows.import_from_csv('qualificacao-socio.csv')}
+UNIDADES_FEDERATIVAS = {
+    'Acre': 'AC',
+    'Alagoas': 'AL',
+    'Amapá': 'AP',
+    'Amazonas': 'AM',
+    'Bahia': 'BA',
+    'Ceará': 'CE',
+    'Distrito Federal': 'DF',
+    'Espírito Santo': 'ES',
+    'Goiás': 'GO',
+    'Maranhão': 'MA',
+    'Mato Grosso': 'MT',
+    'Mato Grosso do Sul': 'MS',
+    'Minas Gerais': 'MG',
+    'Paraná': 'PR',
+    'Paraíba': 'PB',
+    'Pará': 'PA',
+    'Pernambuco': 'PE',
+    'Piauí': 'PI',
+    'Rio Grande do Norte': 'RN',
+    'Rio Grande do Sul': 'RS',
+    'Rio de Janeiro': 'RJ',
+    'Rondônia': 'RO',
+    'Roraima': 'RR',
+    'Santa Catarina': 'SC',
+    'Sergipe': 'SE',
+    'São Paulo': 'SP',
+    'Tocantins': 'TO',
+}
 HEADER = (
     'cnpj_empresa', 'nome_empresa', 'codigo_tipo_socio',
     'tipo_socio', 'cpf_cnpj_socio', 'codigo_qualificacao_socio',
@@ -154,11 +183,11 @@ def merge_all(wildcard, output):
                 continue
 
             print(f'Merging {filename}...')
-            unidade_federativa = Path(filename).name.replace('.csv', '')
+            uf = UNIDADES_FEDERATIVAS[Path(filename).name.replace('.csv', '')]
             with open(filename, encoding='utf8') as fobj_uf:
                 reader = csv.DictReader(fobj_uf)
                 for row in reader:
-                    row['unidade_federativa'] = unidade_federativa
+                    row['unidade_federativa'] = uf
                     writer.writerow(row)
 
 
