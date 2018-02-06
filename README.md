@@ -30,7 +30,7 @@ O campo de qualificação do sócio foi definido com base [na tabela
 disponibilizada pela Receita
 Federal](http://idg.receita.fazenda.gov.br/orientacao/tributaria/cadastros/cadastro-nacional-de-pessoas-juridicas-cnpj/Qualificacao_socio.pdf)
 e está disponível no arquivo
-[`qualificacao-socios.csv`](qualificacao-socios.csv).
+[`qualificacao-socio.csv`](qualificacao-socio.csv).
 
 Segundo a assessoria de imprensa da Receita Federal do Brasil, a lista de CNPJs
 não tem ainda registro de todas as empresas do país. A Receita disponibilizou
