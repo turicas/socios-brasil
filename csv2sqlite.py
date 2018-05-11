@@ -27,7 +27,7 @@ cursor = connection.cursor()
 cursor.execute(drop_sql)
 cursor.execute(create_sql)
 
-with open('output/Brasil.csv', encoding='utf8') as fobj:
+with open('output/socios-brasil.csv.xz', encoding='utf8') as fobj:
     for counter, row in enumerate(csv.DictReader(fobj), start=1):
         data = [row[field] for field in header]
         cursor.execute(insert_sql, data)

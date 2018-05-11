@@ -3,6 +3,8 @@ import argparse
 import csv
 import datetime
 import glob
+import io
+import lzma
 import os
 import stat
 from pathlib import Path
@@ -85,6 +87,7 @@ def create_download_script(filename='download.sh',
         fobj.write('#!/bin/sh\n')
         fobj.write(f'# Arquivo gerado em {today.year}-{today.month}-{today.day}\n')
         fobj.write('# Visite o site da Receita Federal para verificar se existem atualizações.\n\n')
+        fobj.write('mkdir -p download\n\n')
         for row in links:
             path = download_path / (row.uf + '.txt')
             fobj.write(f'wget -O "{path}" "{row.url}"\n')
@@ -142,12 +145,14 @@ def read_file(filename, encoding):
 
 def convert_file(filename, output, input_encoding='iso-8859-15',
                  output_encoding='utf8'):
-    with open(output, encoding=output_encoding, mode='w') as fobj:
+    with lzma.open(output, mode='w') as fobj:
+        fobj = io.TextIOWrapper(fobj, encoding=output_encoding)
         writer = csv.DictWriter(fobj, fieldnames=HEADER, lineterminator='\n')
         writer.writeheader()
 
         data = read_file(filename, encoding=input_encoding)
         for row in data:
+
             cnpj_empresa = row['cnpj']
             nome_empresa = row['nome_empresarial']
             for partner in row['partners']:
@@ -155,7 +160,35 @@ def convert_file(filename, output, input_encoding='iso-8859-15',
                     'cnpj_empresa': cnpj_empresa,
                     'nome_empresa': nome_empresa,
                 })
+                if (partner['cpf_cnpj_socio'] and
+                        partner['nome_empresa'] == partner['nome_socio']):
+                    # Error in the dataset
+                    partner['nome_socio'] = \
+                        f"? {partner['qualificacao_socio']} ({partner['cpf_cnpj_socio']})"
                 writer.writerow(partner)
+
+
+def fix_converted_file(filename, output,
+                       input_encoding='utf-8', output_encoding='utf8'):
+    companies = {}
+    with lzma.open(filename) as fobj_read:
+        fobj_read = io.TextIOWrapper(fobj_read, encoding=input_encoding)
+        reader = csv.DictReader(fobj_read)
+        for row in reader:
+            companies[row['cnpj_empresa']] = row['nome_empresa']
+
+    with lzma.open(filename) as fobj_read, lzma.open(output, mode='w') as fobj_write:
+        fobj_read = io.TextIOWrapper(fobj_read, encoding=input_encoding)
+        fobj_write = io.TextIOWrapper(fobj_write, encoding=output_encoding)
+        reader = csv.DictReader(fobj_read)
+        writer = csv.DictWriter(fobj_write, fieldnames=list(row.keys()),
+                                lineterminator='\n')
+        writer.writeheader()
+        for row in reader:
+            if (row['nome_socio'].startswith('? ') and
+                    row['cpf_cnpj_socio'] in companies):
+                row['nome_socio'] = companies[row['cpf_cnpj_socio']]
+            writer.writerow(row)
 
 
 def convert_all(wildcard, output_path):
@@ -163,28 +196,33 @@ def convert_all(wildcard, output_path):
     if not output_path.exists():
         output_path.mkdir()
 
-    for filename in glob.glob(wildcard):
+    for filename in sorted(glob.glob(wildcard)):
         uf = Path(filename).name.replace('.txt', '')
-        output = output_path / Path(uf + '.csv')
+        output = output_path / Path(uf + '.csv.xz')
         print(f'Converting {filename} into {output}...')
+        # TODO: do it in parallel
         convert_file(filename, output)
 
 
-def merge_all(wildcard, output):
+def merge_all(wildcard, output,
+              input_encoding='utf-8', output_encoding='utf-8'):
     output = Path(output)
     header = list(HEADER) + ['unidade_federativa']
 
-    with open(output, mode='w', encoding='utf8') as fobj:
+    with lzma.open(output, mode='w') as fobj:
+        fobj = io.TextIOWrapper(fobj, encoding=output_encoding)
         writer = csv.DictWriter(fobj, fieldnames=header, lineterminator='\n')
         writer.writeheader()
 
-        for filename in glob.glob(wildcard):
+        for filename in sorted(glob.glob(wildcard)):
             if 'links' in filename.lower() or 'brasil' in filename.lower():
                 continue
 
             print(f'Merging {filename}...')
-            uf = UNIDADES_FEDERATIVAS[Path(filename).name.replace('.csv', '')]
-            with open(filename, encoding='utf8') as fobj_uf:
+            name = Path(filename).name.replace('.csv', '').replace('.xz', '')
+            uf = UNIDADES_FEDERATIVAS[name]
+            with lzma.open(filename) as fobj_uf:
+                fobj_uf = io.TextIOWrapper(fobj_uf, encoding=input_encoding)
                 reader = csv.DictReader(fobj_uf)
                 for row in reader:
                     row['unidade_federativa'] = uf
@@ -196,7 +234,7 @@ def main():
     parser.add_argument(
         'command',
         choices=['create-download-script', 'convert-all', 'merge-all',
-                'convert-file']
+                'convert-file', 'fix-converted-file']
     )
     parser.add_argument('--input-filename')
     parser.add_argument('--output-filename')
@@ -220,6 +258,15 @@ def main():
         convert_file(input_filename, output_filename)
         print('done.')
 
+    elif args.command == 'fix-converted-file':
+        input_file = Path(args.input_filename or 'output/pre-socios-brasil.csv.xz')
+        output_file = Path(args.output_filename or 'output/socios-brasil.csv.xz')
+
+        print(f'Fixing file "{input_filename}" into {output_filename}... ', end='',
+                flush=True)
+        fix_converted_file(input_filename, output_filename)
+        print('done.')
+
     elif args.command == 'convert-all':
         print('Converting all files in "download"...')
         convert_all('download/*.txt', 'output')
@@ -227,7 +274,7 @@ def main():
 
     elif args.command == 'merge-all':
         print('Merging all converted files in "output"...')
-        merge_all('output/*.csv', 'output/Brasil.csv')
+        merge_all('output/*.csv.xz', 'output/pre-socios-brasil.csv.xz')
         print('Done.')
 
 

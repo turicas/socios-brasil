@@ -104,11 +104,22 @@ exemplo:
 python3 socios.py convert-file --input-filename=download/Paraná.txt --output-filename=output/Paraná.csv
 ```
 
-Para gerar o `output/Brasil.csv`, execute:
+Para gerar o arquivo consolidando os sócios de todas as unidades federativas
+(`output/pre-socios-brasil.csv.xz`), execute:
 
 ```bash
 python3 socios.py merge-all
 ```
+
+Os nomes de empresas sócias vem com erros (esses erros estão nos dados da
+Receita Federal) e você pode rodar um comando que lê o arquivo e corrige os
+nomes que forem possíveis:
+
+```bash
+python3 socios.py fix-converted-file
+```
+
+O comando acima irá gerar o arquivo `output/socios-brasil.csv.xz`.
 
 Para gerar a base de dados SQLite (facilita consultas), rode o seguinte
 comando:
@@ -116,7 +127,12 @@ comando:
 ```bash
 python3 csv2sqlite.py
 ```
- ### Downloads
+
+Esse arquivo converte o arquivo `output/socios-brasil.csv.xz` em
+`output/socios-brasil.sqlite`.
+
+
+### Downloads
 
 Previsão de tamanhos dos arquivos a serem baixados (atualizado em 2018-02-01):
 
