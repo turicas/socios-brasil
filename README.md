@@ -3,7 +3,7 @@
 Script que baixa todos os dados de sócios das empresas brasileiras [disponíveis
 no site da Receita
 Federal](http://idg.receita.fazenda.gov.br/orientacao/tributaria/cadastros/cadastro-nacional-de-pessoas-juridicas-cnpj/dados-abertos-do-cnpj),
-extrai, conserta alguns erros e converte para CSV. [Veja mais
+extrai, conserta [alguns erros](#Erros) e converte para CSV. [Veja mais
 detalhes](http://dados.gov.br/noticia/governo-federal-disponibiliza-os-dados-abertos-do-cadastro-nacional-da-pessoa-juridica).
 
 
@@ -11,13 +11,20 @@ detalhes](http://dados.gov.br/noticia/governo-federal-disponibiliza-os-dados-abe
 
 **[Acesse diretamente os dados
 convertidos](https://drive.google.com/open?id=1o2q2FxK9RecbwrhYxlXj25qWJHh2guhi)**
-caso você não queira/possa rodar o script. Na pasta "output" você encontrará,
-compactados:
+caso você não queira/possa rodar o script. Na pasta `output` você encontrará os
+seguintes arquivos:
 
-- Um arquivo por unidade federativa;
-- Arquivo `Brasil.csv`, com todos os dados consolidados;
-- Arquivo `socios-brasil.sqlite` - arquivo acima convertido para SQLite, para
-  facilitar consultas.
+- Dois arquivos por unidade federativa - lista de empresas
+  (`empresas-UF.csv.xz`) e de sócios (`socios-UF.csv.xz`);
+- Arquivo `socios-brasil.csv.xz`, com todos os dados de sócios consolidados;
+- Arquivo `empresas-brasil.csv.xz`, com listagem de CNPJ/razão social das
+  empresas de todo o país;
+- Arquivo `empresas-socias.csv.xz`, com listagem das empresas sócias de outras
+  empresas;
+- Arquivo `socios-brasil.sqlite`, que concatena os 3 arquivos acima (cada um em
+  uma tabela) em um banco de dados SQLite (facilita consultas).
+
+> Nota: a extensão `.xz` quer dizer que o arquivo foi compactado.
 
 Os dados originalmente estão em um formato [fixed-width
 file](http://www.softinterface.com/Convert-XLS/Features/Fixed-Width-Text-File-Definition.htm)
@@ -47,8 +54,86 @@ Caso seja um sócio PJ, será fornecido o número do CNPJ deste "sócio" PJ.
 
 ### Erros
 
-- Algumas empresas não constam nos arquivos acima, acredito que sejam dados não
-  muito atuais.
+#### Razão social das sócias está incorreta
+
+A razão social de empresas sócias (campo "nome do sócio") está incorreta: é
+repetida a razão social da empresa que está sendo descrita. Exemplo: no arquivo
+correspondente ao Acre, linhas 2.346 a 2.350:
+
+```
+[2346] 0100342966000107ETCA-EMPRESA DE TRANSPORTE COLETIVO DO ACRE LTDA.
+[2347] 020034296600010716203660300010922ETCA-EMPRESA DE TRANSPORTE COLETIVO DO ACRE LTDA.
+[2348] 02003429660001072              22BALTAZAR JOSE DE SOUSA
+[2349] 02003429660001072              49RENE GOMES DE SOUSA
+[2350] 02003429660001072              22LUIS GONZAGA DE SOUSA
+```
+
+A linha 2.346 descreve a empresa (CNPJ: 00342966000107, razão social:
+ETCA-EMPRESA DE TRANSPORTE COLETIVO DO ACRE LTDA.) e as demais linhas descrevem
+seus sócios. A linha 2.347 representa um sócio pessoa jurídica e as demais
+sócios pessoa física. O sócio pessoa jurídica, cujo CNPJ é 62036603000109
+aparece, no arquivo acima, como tendo razão social "ETCA-EMPRESA DE TRANSPORTE
+COLETIVO DO ACRE LTDA.", que é incorreto (é o mesmo da empresa descrita).
+
+Busca pelo CNPJ da empresa sócia em arquivos de outras unidades federativas,
+encontramos uma descrição dessa empresa a partir da linha 68.178 no arquivo
+correspondente ao Alagoas:
+
+```
+[68178] 0162036603000109TRANSTAZA RODOVIARIO LTDA
+[68179] 02620366030001092              22RENE GOMES DE SOUSA
+[68180] 02620366030001092              22BALTAZAR JOSE DE SOUSA
+[68181] 02620366030001092              22RUBENS JOSE SIMOES PIMENTA
+[68182] 02620366030001092              22RONAN GERALDO GOMES DE SOUSA
+```
+
+Para ter os nomes das empresas sócias corretos é necessário varrer todas as
+descrições de empresas e então corrigir os nomes das empresas sócias, mas nem
+sempre isso é possível (veja o próximo erro).
+
+
+#### Razão social de algumas empresas é inexistente
+
+Por conta do erro anterior não é possível saber a razão social de empresas que
+não estão descritas nesses arquivos, que são os casos de pessoas exteriores.
+
+Exemplos de CNPJs que não conseguimos identificar a razão social:
+10877540000101, 17546494000107, 13779412000113. O total de CNPJs com esse
+problema é de 33.708 (valor obtido rodando a consulta
+`SELECT COUNT(DISTINCT(cnpj)) FROM socios WHERE nome_socio LIKE '? %'`).
+
+> Nota: o script que converte os dados coloca um nome padronizado (começando
+> com "? " nos CNPJs em que não consegue-se identificar a razão social.
+
+
+#### Códigos de qualificação não descritos
+
+Os seguintes códigos de qualificação de sócio aparecem nos arquivos, mas não na
+tabela de qualificação: 18, 33, 00, 64, 09, 14, 15 e 13.
+
+Exemplos de CNPJs que possuem sócios com qualificação não descrita:
+03397208000184, 05148993000167 e 03574695000103. O total de CNPJs com esse
+problema é de 2.419 (valor obtido rodando a consulta
+`SELECT COUNT(DISTINCT(cnpj)) FROM socios WHERE qualificacao_socio = 'INVÁLIDA';`).
+
+
+#### Empresas com razão social em branco
+
+Duas empresas possuem razão social em branco, ambas de São Paulo. Os CNPJs são
+os seguintes: 08013165000533 e 08393057000533.
+
+Valores obtidos rodando a consulta:
+`SELECT cnpj, uf FROM socios WHERE razao_social = '';`
+
+
+#### Base incompleta
+
+- Alguns CNPJs não constam nos arquivos (como EI, MEI e de candidatos e
+  empresas inativas), tornando a base incompleta e de difícil cruzamento com
+  outras bases, principalmente quanto a dados históricos;
+- Essa base de dados não possui mais informações das empresas, como lista de
+  CNAEs e endereço (que estão disponíveis apenas através de consultas
+  no site da Receita Federal, onde é necessário preencher um CAPTCHA).
 
 
 ## Rodando
