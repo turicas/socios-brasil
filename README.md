@@ -142,6 +142,26 @@ Valores obtidos rodando a consulta:
   no site da Receita Federal, onde é necessário preencher um CAPTCHA).
 
 
+#### Formato não padronizado
+
+- Os dados estão em um formato não padronizado ([fixed-width
+  file](http://www.softinterface.com/Convert-XLS/Features/Fixed-Width-Text-File-Definition.htm)),
+  onde os metadados (como o nome de cada coluna) são totalmente personalizados
+  para esse caso e precisam ser descobertos através de [uma imagem disponível
+  no site da Receita
+  Federal](http://idg.receita.fazenda.gov.br/orientacao/tributaria/cadastros/cadastro-nacional-de-pessoas-juridicas-cnpj/Leiaute.jpg).
+  Caso os dados estivessem disponíveis em um formato padronizado e aberto, como
+  o CSV, os nomes das colunas poderiam ser descritos na primeira linha do
+  arquivo, não necessitando a criação de um software específico para leitura
+  dos mesmos;
+- Registros de tipos diferentes (empresa e sócio) estão juntos nos mesmos
+  arquivos, dificultando ainda mais a extração - poderiam estar em arquivos
+  distintos (um que possui CNPJ, razão social e endereço das empresas e outro
+  que descreve os sócios de cada empresa);
+- Os arquivos poderiam estar compactados (o que reduziria drasticamente o tempo
+  de transferência), dado que alguns possuem gigabytes de tamanho.
+
+
 ## Rodando
 
 Esse script depende de Python 3.6 e de algumas bibliotecas. Instale-as
