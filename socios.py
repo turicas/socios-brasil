@@ -7,6 +7,7 @@ import io
 import lzma
 import os
 import stat
+from multiprocessing import Pool
 from pathlib import Path
 
 import requests
@@ -50,10 +51,11 @@ UNIDADES_FEDERATIVAS = {
     'São Paulo': 'SP',
     'Tocantins': 'TO',
 }
-HEADER = (
-    'cnpj_empresa', 'nome_empresa', 'codigo_tipo_socio',
-    'tipo_socio', 'cpf_cnpj_socio', 'codigo_qualificacao_socio',
-    'qualificacao_socio', 'nome_socio'
+HEADER_COMPANIES = ('cnpj', 'razao_social')
+HEADER_PARTNERS = (
+    'cnpj', 'razao_social', 'codigo_tipo_socio', 'tipo_socio',
+    'cpf_cnpj_socio', 'codigo_qualificacao_socio', 'qualificacao_socio',
+    'nome_socio',
 )
 
 
@@ -80,7 +82,7 @@ def create_download_script(filename='download.sh',
 
     links = discover_links()
     today = datetime.datetime.now()
-    date = f'{today.year}-{today.month}-{today.day}'
+    date = f'{today.year}-{today.month:02d}-{today.day:02d}'
     rows.export_to_csv(links, output_path / f'links_{date}.csv')
 
     with open(filename, mode='w', encoding='utf8') as fobj:
@@ -97,12 +99,19 @@ def create_download_script(filename='download.sh',
 
 
 def parse_company(line):
-    tipo, cnpj, nome_empresarial = line[:2], line[2:16], line[16:]
+    tipo, cnpj, nome_empresarial = line[:2], line[2:16], line[16:].strip()
     assert tipo == '01'
     return {
         'cnpj': cnpj,
-        'nome_empresarial': nome_empresarial.strip(),
+        'razao_social': nome_empresarial,
     }
+
+
+def read_companies_rfb(filename, encoding):
+    with open(filename, encoding=encoding) as fobj:
+        for line in fobj:
+            if line.startswith('01'):
+                yield parse_company(line)
 
 
 def parse_partner(line):
@@ -110,7 +119,7 @@ def parse_partner(line):
     cpf_cnpj, codigo_qualificacao, nome = line[17:31], line[31:33], line[33:]
     assert tipo == '02'
     return {
-        'cnpj_empresa': cnpj,
+        'cnpj': cnpj,
         'codigo_tipo_socio': codigo_tipo_socio,
         'tipo_socio': TIPOS_PESSOAS[codigo_tipo_socio],
         'cpf_cnpj_socio': cpf_cnpj.strip() or None,
@@ -120,75 +129,71 @@ def parse_partner(line):
     }
 
 
-def read_file(filename, encoding):
+def read_partners(filename, encoding):
     with open(filename, encoding=encoding) as fobj:
-        company = None
         for line in fobj:
-            if line.startswith('01'):  # new company
-                if company is not None:
-                    for partner in partners:
-                        assert partner['cnpj_empresa'] == company['cnpj']
-                    # yield last company
-                    yield {**company, 'partners': partners}
-
-                company = parse_company(line)
-                partners = []
-
-            elif line.startswith('02'):
-                partners.append(parse_partner(line))
-
-            else:
-                raise ValueError('Malformed file')
-
-        yield {**company, 'partners': partners}
+            if line.startswith('02'):
+                yield parse_partner(line)
 
 
-def convert_file(filename, output, input_encoding='iso-8859-15',
-                 output_encoding='utf8'):
+def extract_companies(filename, output, input_encoding, output_encoding):
     with lzma.open(output, mode='w') as fobj:
         fobj = io.TextIOWrapper(fobj, encoding=output_encoding)
-        writer = csv.DictWriter(fobj, fieldnames=HEADER, lineterminator='\n')
+        writer = csv.DictWriter(
+            fobj,
+            fieldnames=HEADER_COMPANIES,
+            lineterminator='\n',
+        )
         writer.writeheader()
+        company_names = {}
+        for company in read_companies_rfb(filename, input_encoding):
+            company_names[company['cnpj']] = company['razao_social']
+            writer.writerow(company)
 
-        data = read_file(filename, encoding=input_encoding)
-        for row in data:
-
-            cnpj_empresa = row['cnpj']
-            nome_empresa = row['nome_empresarial']
-            for partner in row['partners']:
-                partner.update({
-                    'cnpj_empresa': cnpj_empresa,
-                    'nome_empresa': nome_empresa,
-                })
-                if (partner['cpf_cnpj_socio'] and
-                        partner['nome_empresa'] == partner['nome_socio']):
-                    # Error in the dataset
-                    partner['nome_socio'] = \
-                        f"? {partner['qualificacao_socio']} ({partner['cpf_cnpj_socio']})"
-                writer.writerow(partner)
+    return company_names
 
 
-def fix_converted_file(filename, output,
-                       input_encoding='utf-8', output_encoding='utf8'):
-    companies = {}
-    with lzma.open(filename) as fobj_read:
-        fobj_read = io.TextIOWrapper(fobj_read, encoding=input_encoding)
-        reader = csv.DictReader(fobj_read)
-        for row in reader:
-            companies[row['cnpj_empresa']] = row['nome_empresa']
+def convert_file(filename, output_companies, output_partners,
+                 input_encoding='iso-8859-15', output_encoding='utf8'):
+    if not output_companies.parent.exists():
+        output_companies.parent.mkdir()
+    if not output_partners.parent.exists():
+        output_partners.parent.mkdir()
 
-    with lzma.open(filename) as fobj_read, lzma.open(output, mode='w') as fobj_write:
-        fobj_read = io.TextIOWrapper(fobj_read, encoding=input_encoding)
-        fobj_write = io.TextIOWrapper(fobj_write, encoding=output_encoding)
-        reader = csv.DictReader(fobj_read)
-        writer = csv.DictWriter(fobj_write, fieldnames=list(row.keys()),
-                                lineterminator='\n')
+    company_names = extract_companies(
+        filename,
+        output_companies,
+        input_encoding,
+        output_encoding,
+    )
+
+    with lzma.open(output_partners, mode='w') as fobj:
+        # Store the partners file, fixing some names based on company_names
+        # dict. NOTE: this do not solve the whole problem (will only fix if the
+        # partner company was registered in the same state).
+        fobj = io.TextIOWrapper(fobj, encoding=output_encoding)
+        writer = csv.DictWriter(
+            fobj,
+            fieldnames=HEADER_PARTNERS,
+            lineterminator='\n',
+        )
         writer.writeheader()
-        for row in reader:
-            if (row['nome_socio'].startswith('? ') and
-                    row['cpf_cnpj_socio'] in companies):
-                row['nome_socio'] = companies[row['cpf_cnpj_socio']]
-            writer.writerow(row)
+        for partner in read_partners(filename, encoding=input_encoding):
+            partner['razao_social'] = company_names[partner['cnpj']]
+            # If the partner is a company, try to fix its name
+            document = partner['cpf_cnpj_socio']
+            if document and len(document) == 14:
+                partner['nome_socio'] = company_names.get(
+                    document,
+                    f"? {partner['qualificacao_socio']} ({partner['cpf_cnpj_socio']})"
+                )
+            writer.writerow(partner)
+
+
+def convert_file_parallel(arg):
+    filename, output_companies, output_partners = arg
+    print(f'Converting {filename} into {output_companies} and {output_partners}...')
+    convert_file(filename, output_companies, output_partners)
 
 
 def convert_all(wildcard, output_path):
@@ -196,18 +201,21 @@ def convert_all(wildcard, output_path):
     if not output_path.exists():
         output_path.mkdir()
 
+    args = []
     for filename in sorted(glob.glob(wildcard)):
-        uf = Path(filename).name.replace('.txt', '')
-        output = output_path / Path(uf + '.csv.xz')
-        print(f'Converting {filename} into {output}...')
-        # TODO: do it in parallel
-        convert_file(filename, output)
+        uf = UNIDADES_FEDERATIVAS[Path(filename).name.replace('.txt', '')]
+        output_companies = output_path / Path(f'empresas-{uf}.csv.xz')
+        output_partners = output_path / Path(f'socios-{uf}.csv.xz')
+        args.append((filename, output_companies, output_partners))
+
+    with Pool() as pool:
+        pool.map(convert_file_parallel, args)
 
 
-def merge_all(wildcard, output,
-              input_encoding='utf-8', output_encoding='utf-8'):
+def merge_partner_files(wildcard, output, input_encoding='utf-8',
+                        output_encoding='utf-8'):
     output = Path(output)
-    header = list(HEADER) + ['unidade_federativa']
+    header = list(HEADER_PARTNERS) + ['uf']
 
     with lzma.open(output, mode='w') as fobj:
         fobj = io.TextIOWrapper(fobj, encoding=output_encoding)
@@ -219,25 +227,93 @@ def merge_all(wildcard, output,
                 continue
 
             print(f'Merging {filename}...')
-            name = Path(filename).name.replace('.csv', '').replace('.xz', '')
-            uf = UNIDADES_FEDERATIVAS[name]
+            uf = Path(filename).name.replace('.csv', '').replace('.xz', '').split('-')[-1]
             with lzma.open(filename) as fobj_uf:
                 fobj_uf = io.TextIOWrapper(fobj_uf, encoding=input_encoding)
                 reader = csv.DictReader(fobj_uf)
                 for row in reader:
-                    row['unidade_federativa'] = uf
+                    row['uf'] = uf
                     writer.writerow(row)
+
+
+def read_companies(filename, input_encoding):
+    with lzma.open(filename) as fobj_read:
+        fobj_read = io.TextIOWrapper(fobj_read, encoding=input_encoding)
+        companies = {row['cnpj']: row['razao_social']
+                     for row in csv.DictReader(fobj_read)}
+    return companies
+
+
+def fix_partner_file(filename, output, input_encoding='utf-8',
+                     output_encoding='utf-8'):
+    companies = read_companies(filename, input_encoding)
+
+    header = list(HEADER_PARTNERS) + ['uf']
+    with lzma.open(filename) as fobj_read, \
+         lzma.open(output, mode='w') as fobj_write:
+        fobj_read = io.TextIOWrapper(fobj_read, encoding=input_encoding)
+        fobj_write = io.TextIOWrapper(fobj_write, encoding=output_encoding)
+        reader = csv.DictReader(fobj_read)
+        writer = csv.DictWriter(fobj_write, fieldnames=header,
+                                lineterminator='\n')
+        writer.writeheader()
+        for row in reader:
+            document = row['cpf_cnpj_socio']
+            if document in companies:
+                row['nome_socio'] = companies[document]
+            writer.writerow(row)
+
+
+def extract_companies(filename, output, input_encoding='utf-8',
+                      output_encoding='utf-8'):
+    companies = read_companies(filename, input_encoding)
+    with lzma.open(output, mode='w') as fobj:
+        fobj = io.TextIOWrapper(fobj, encoding=output_encoding)
+        writer = csv.writer(fobj)
+        writer.writerow(['cnpj', 'razao_social'])
+        for document, name in companies.items():
+            writer.writerow([document, name])
+
+
+def extract_company_company_partnerships(filename, output,
+                                         input_encoding='utf-8',
+                                         output_encoding='utf-8'):
+
+    header = ['cnpj', 'razao_social', 'cnpj_socia', 'qualificacao_socia',
+              'razao_social_socia']
+    with lzma.open(filename) as fobj_read, lzma.open(output, mode='w') as fobj_write:
+        fobj_read = io.TextIOWrapper(fobj_read, encoding=input_encoding)
+        fobj_write = io.TextIOWrapper(fobj_write, encoding=output_encoding)
+        reader = csv.DictReader(fobj_read)
+        writer = csv.DictWriter(fobj_write, fieldnames=header,
+                                lineterminator='\n')
+        writer.writeheader()
+        for row in reader:
+            document = row['cpf_cnpj_socio']
+            if document and len(document) == 14:
+                partner = {
+                    'cnpj': row['cnpj'],
+                    'razao_social': row['razao_social'],
+                    'cnpj_socia': row['cpf_cnpj_socio'],
+                    'qualificacao_socia': row['qualificacao_socio'],
+                    'razao_social_socia': row['nome_socio'],
+                }
+                writer.writerow(partner)
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         'command',
-        choices=['create-download-script', 'convert-all', 'merge-all',
-                'convert-file', 'fix-converted-file']
+        choices=['create-download-script', 'convert-all',
+                 'merge-partner-files', 'extract-companies',
+                 'convert-file', 'fix-partner-file',
+                 'extract-company-company-partnerships']
     )
     parser.add_argument('--input-filename')
     parser.add_argument('--output-filename')
+    parser.add_argument('--output_companies_filename')
+    parser.add_argument('--output_partners_filename')
     args = parser.parse_args()
 
     if args.command == 'create-download-script':
@@ -247,24 +323,23 @@ def main():
         print('Run "download.sh" to download files, then run "convert-all".')
 
     elif args.command == 'convert-file':
-        if args.input_filename is None or args.output_filename is None:
-            print('ERROR: options --input-filename and --output-filename are needed.')
+        if None in (args.input_filename, args.output_companies_filename,
+                    args.output_partners_filename):
+            print('ERROR: options --input-filename, '
+                  '--output_companies_filename '
+                  'and --output_partners_filename are required.')
             exit(1)
 
         input_filename = Path(args.input_filename)
-        output_filename = Path(args.output_filename)
+        output_companies_filename = Path(args.output_companies_filename)
+        output_partners_filename = Path(args.output_partners_filename)
         print(f'Converting file "{input_filename}" into CSV... ', end='',
                 flush=True)
-        convert_file(input_filename, output_filename)
-        print('done.')
-
-    elif args.command == 'fix-converted-file':
-        input_file = Path(args.input_filename or 'output/pre-socios-brasil.csv.xz')
-        output_file = Path(args.output_filename or 'output/socios-brasil.csv.xz')
-
-        print(f'Fixing file "{input_filename}" into {output_filename}... ', end='',
-                flush=True)
-        fix_converted_file(input_filename, output_filename)
+        convert_file(
+            input_filename,
+            output_companies_filename,
+            output_partners_filename,
+        )
         print('done.')
 
     elif args.command == 'convert-all':
@@ -272,10 +347,32 @@ def main():
         convert_all('download/*.txt', 'output')
         print('Done.')
 
-    elif args.command == 'merge-all':
-        print('Merging all converted files in "output"...')
-        merge_all('output/*.csv.xz', 'output/pre-socios-brasil.csv.xz')
-        print('Done.')
+    elif args.command == 'merge-partner-files':
+        print('Merging partner files in "output"...')
+        merge_partner_files('output/socios-*.csv.xz', 'output/pre-socios-brasil.csv.xz')
+
+    elif args.command == 'fix-partner-file':
+        input_filename = Path(args.input_filename or 'output/pre-socios-brasil.csv.xz')
+        output_filename = Path(args.output_filename or 'output/socios-brasil.csv.xz')
+
+        print(f'Fixing file "{input_filename}" into {output_filename}... ', end='',
+                flush=True)
+        fix_partner_file(input_filename, output_filename)
+        print('done.')
+
+    elif args.command == 'extract-companies':
+        input_filename = Path(args.input_filename or 'output/socios-brasil.csv.xz')
+        output_filename = Path(args.output_filename or 'output/empresas-brasil.csv.xz')
+        extract_companies(input_filename, output_filename)
+
+    elif args.command == 'extract-company-company-partnerships':
+        input_filename = Path(args.input_filename or 'output/socios-brasil.csv.xz')
+        output_filename = Path(args.output_filename or 'output/empresas-socias.csv.xz')
+
+        print(f'Extracting company-company partnerships from "{input_filename}" into {output_filename}... ',
+              end='', flush=True)
+        extract_company_company_partnerships(input_filename, output_filename)
+        print('done.')
 
 
 if __name__ == '__main__':

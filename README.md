@@ -3,23 +3,21 @@
 Script que baixa todos os dados de sócios das empresas brasileiras [disponíveis
 no site da Receita
 Federal](http://idg.receita.fazenda.gov.br/orientacao/tributaria/cadastros/cadastro-nacional-de-pessoas-juridicas-cnpj/dados-abertos-do-cnpj),
-extrai e converte para CSV. [Veja mais detalhes](http://dados.gov.br/noticia/governo-federal-disponibiliza-os-dados-abertos-do-cadastro-nacional-da-pessoa-juridica).
+extrai, conserta alguns erros e converte para CSV. [Veja mais
+detalhes](http://dados.gov.br/noticia/governo-federal-disponibiliza-os-dados-abertos-do-cadastro-nacional-da-pessoa-juridica).
 
 
 ## Dados
 
 **[Acesse diretamente os dados
 convertidos](https://drive.google.com/open?id=1o2q2FxK9RecbwrhYxlXj25qWJHh2guhi)**
-caso você não queira/possa rodar o script (esses dados foram baixados e
-convertidos em 31 de janeiro de 2018). Na pasta "output" você encontrará,
+caso você não queira/possa rodar o script. Na pasta "output" você encontrará,
 compactados:
 
 - Um arquivo por unidade federativa;
 - Arquivo `Brasil.csv`, com todos os dados consolidados;
 - Arquivo `socios-brasil.sqlite` - arquivo acima convertido para SQLite, para
   facilitar consultas.
-
-Cada registro dos arquivos acima representa um sócio.
 
 Os dados originalmente estão em um formato [fixed-width
 file](http://www.softinterface.com/Convert-XLS/Features/Fixed-Width-Text-File-Definition.htm)
@@ -39,11 +37,9 @@ Ainda segundo o fisco, a lista divulgada tem somente companhias na situação
 Cadastral Ativa. Empresas como as MEI e EI, por exemplo, ainda não constam na
 lista.
 
-A pesquisa está atualizada até o dia 15/12/2017, a data consta ao final da
-tabela. A previsão da Receita é atualizar a lista a cada seis meses.
-O órgão informou que **não divulgará CPF dos sócios**. Somente o nome dos
-sócios será fornecido. Caso seja um sócio PJ, será fornecido o número do CNPJ
-deste "sócio" PJ.
+A previsão da Receita é atualizar a lista a cada seis meses.  O órgão informou
+que **não divulgará CPF dos sócios**. Somente o nome dos sócios será fornecido.
+Caso seja um sócio PJ, será fornecido o número do CNPJ deste "sócio" PJ.
 
 > Nota: a codificação de caracteres original é ISO-8859-15, mas o script gera o
 > CSV em UTF-8.
@@ -66,12 +62,8 @@ pip install -r requirements.txt
 
 Você deverá rodá-lo em várias etapas:
 
-- Criar o script que baixa os arquivos fix-width
-- Baixar os arquivos
-- Converter os arquivos para cada unidade federativa (gerando CSVs)
-- Juntar os CSVs em um só (para todo o Brasil)
 
-Criando o script que baixa os arquivos:
+### Criar o script que baixa os arquivos
 
 ```bash
 python3 socios.py create-download-script
@@ -79,15 +71,22 @@ python3 socios.py create-download-script
 
 Após executar, um arquivo `download.sh` será criado. Esse script precisa do
 `wget` instalado (que é o padrão em distribuições GNU/Linux - caso use MacOS,
-instale-o rodando `brew install wget`). Rode o script para baixar todos os
-arquivos de sócios da Receita Federal:
+instale-o rodando `brew install wget`).
+
+
+### Baixar os dados da Receita Federal:
 
 ```bash
 sh download.sh
 ```
 
-Poderá demorar. Vários arquivos `.txt` serão baixados para o diretório
-`download`.  Converta-os para CSV com o seguinte comando:
+Esse download poderá demorar bastante.
+Serão baixados diversos arquivos `.txt` no diretório `download`. Essa etapa
+poderá demorar bastante. Veja na [seção Downloads](#Downloads) o tamanho de
+cada arquivo.
+
+
+### Extrair, consertar e converter em CSV:
 
 ```bash
 python3 socios.py convert-all
@@ -97,29 +96,61 @@ Um diretório `output` será criado com os CSVs (que estarão com codificação
 UTF-8, separados por vírgula).
 
 Caso queira converter apenas um arquivo, você poderá utilizar o subcomando
-`convert-file`, passando o nome do arquivo de origem e o nome de destino,
+`convert-file`, passando o nome do arquivo de origem e os nomes de destino,
 exemplo:
 
 ```bash
-python3 socios.py convert-file --input-filename=download/Paraná.txt --output-filename=output/Paraná.csv
+python3 socios.py convert-file \
+	--input-filename=download/Paraná.txt \
+	--output_companies_filename=output/empresas-PR.csv.xz \
+	--output_partners_filename=output/socios-PR.csv.xz
 ```
+
+
+### Gerar arquivo para todo o Brasil:
 
 Para gerar o arquivo consolidando os sócios de todas as unidades federativas
 (`output/pre-socios-brasil.csv.xz`), execute:
 
 ```bash
-python3 socios.py merge-all
+python3 socios.py merge-partner-files
 ```
 
+### Consertando os nomes de empresas sócias:
+
 Os nomes de empresas sócias vem com erros (esses erros estão nos dados da
-Receita Federal) e você pode rodar um comando que lê o arquivo e corrige os
-nomes que forem possíveis:
+Receita Federal - veja a [seção Erros](#Erros)) e você pode rodar um comando
+que lê o arquivo e corrige os nomes que forem possíveis:
 
 ```bash
-python3 socios.py fix-converted-file
+python3 socios.py fix-partner-file
 ```
 
 O comando acima irá gerar o arquivo `output/socios-brasil.csv.xz`.
+
+
+### Extraindo empresas
+
+Para extrair as empresas (CNPJ e razão social) de todo o Brasil, rode:
+
+```bash
+python3 socios.py extract-companies
+```
+
+O arquivo `output/empresas-brasil.csv.xz` será criado.
+
+
+### Extraindo empresas sócias
+
+Para extrair as relações entre empresas, rode:
+
+```bash
+python3 socios.py extract-company-company-partnerships
+```
+
+O arquivo `output/empresas-socias.csv.xz` será criado.
+
+### Convertendo para SQLite
 
 Para gerar a base de dados SQLite (facilita consultas), rode o seguinte
 comando:
@@ -132,36 +163,48 @@ Esse arquivo converte o arquivo `output/socios-brasil.csv.xz` em
 `output/socios-brasil.sqlite`.
 
 
+### Rodando tudo
+
+Para facilitar, você poderá rodar o script `run.sh`, que executa todos os
+comandos.
+
+
 ### Downloads
 
-Previsão de tamanhos dos arquivos a serem baixados (atualizado em 2018-02-01):
+Previsão de tamanhos dos arquivos a serem baixados (atualizado em 2018-06-03):
 
-- Acre: 8013978 (7,6 MB)
-- Alagoas: 32437339 (31 MB)
-- Amapá:  8404764 (8,0 MB)
-- Amazonas:  35411591 (34 MB)
-- Bahia: 231116303 (220 MB)
-- Ceará: 104380545 (100 MB)
-- Distrito Federal:  107598131 (103 MB)
-- Espírito Santo: 101900028 (97 MB)
-- Goiás : 181131794 (173 MB)
-- Maranhão: 62187690 (59 MB)
-- Mato Grosso: 77130002 (74 MB)
-- Mato Grosso do Sul: 55749271 (53 MB)
-- Minas Gerais: 549952985 (524 MB)
-- Pará:  82718853 (79 MB)
-- Paraíba: 41613361 (40 MB)
-- Paraná: 401246497 (383 MB)
-- Pernambuco: 124284464 (119 MB)
-- Piauí: 31827285 (30 MB)
-- Rio de Janeiro: 487426461 (465 MB)
-- Rio Grande do Norte: 44115843 (42 MB)
-- Rio Grande do Sul: 385868132 (368 MB)
-- Rondônia: 32882369 (31 MB)
-- Roraima: 6426195 (6,1 MB)
-- Santa Catarina: 281316642 (268 MB)
-- São Paulo: 1588432400 (1,5 GB)
-- Sergipe:  33880344 (32 MB)
-- Tocantins:  27034140 (26 MB)
+- Acre: 7,7MB
+- Alagoas: 31MB
+- Amapá: 8,1MB
+- Amazonas: 34MB
+- Bahia: 221MB
+- Ceará: 100MB
+- Distrito Federal: 103MB
+- Espírito Santo: 98MB
+- Goiás: 173MB
+- Maranhão: 60MB
+- Mato Grosso: 74MB
+- Mato Grosso do Sul: 54MB
+- Minas Gerais: 525MB
+- Pará: 79MB
+- Paraíba: 40MB
+- Paraná: 383MB
+- Pernambuco: 119MB
+- Piauí: 31MB
+- Rio de Janeiro: 465MB
+- Rio Grande do Norte: 43MB
+- Rio Grande do Sul: 368MB
+- Rondônia: 32MB
+- Roraima: 6,2MB
+- Santa Catarina: 269MB
+- São Paulo: 1,5GB
+- Sergipe: 33MB
+- Tocantins: 26MB
 
 Total: 4,8 GB.
+
+
+### Em Outras Linguagens
+
+Se você usa R, veja o
+[RFBCNPJ](http://curso-r.com/blog/2018/05/13/2018-05-13-rfbcnpj/).
