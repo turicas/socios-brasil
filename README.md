@@ -140,6 +140,36 @@ Valores obtidos rodando a consulta:
 `SELECT cnpj, uf FROM socios WHERE razao_social = '';`
 
 
+#### Sócios não possuem identificador único
+
+Um total de 3.045.729 nomes de sócios que aparecem em mais uma empresa (valor
+obtido com a consulta
+`SELECT COUNT(*) FROM (SELECT nome_socio, COUNT(*) AS quantidade FROM socios GROUP by nome_socio HAVING COUNT(*) > 1 ORDER BY quantidade DESC);`),
+desses, o nome que mais aparece é "JOSE CARLOS DA SILVA", com 2.083 aparições
+(valor obtido com a consulta
+`SELECT nome_socio, COUNT(*) AS quantidade FROM socios GROUP by nome_socio HAVING COUNT(*) > 1 ORDER BY quantidade DESC LIMIT 1;`).
+"José" é o nome masculino mais comum do Brasil [segundo o
+IBGE](https://censo2010.ibge.gov.br/nomes/) (perde apenas para "Maria") e
+provavelmente existem diversas pessoas chamadas "JOSE CARLOS DA SILVA" que são
+sócios de empresas.
+
+Como o dataset liberado pela Receita Federal não possui CPF dos sócios, fica
+**impossível** determinar os homônimos, que é um **problema gravíssimo**.
+
+Caso o objetivo ao não divulgar o CPF seja proteger o sigilo dos sócios, é
+possível gerar um identificador único (como
+[UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier)) baseado no
+CPF original, dessa forma, o CPF original não será disponibilizado mas mesmo
+assim os usuários do dataset poderão desambiguar os homônimos. Uma outra
+solução possível (melhor) seria disponibilizar apenas alguns números do CPF -
+essa alternativa continua protegendo o número de CPF completo e pode ser útil
+para casos em que possui-se o CPF completo para fazer o cruzamento (sugestão:
+liberar os dígitos que aparecem como "9" nessa máscara: xxx.999.99x-xx -
+omitindo o nono dígito será impossível determinar em que região a pessoa
+registrou o CPF e omitindo os dígitos verificadores será impossível fazer
+ataques de engenharia reversa para descobrir outros dígitos).
+
+
 #### Base incompleta
 
 - Alguns CNPJs não constam nos arquivos (como EI, MEI e de candidatos e
