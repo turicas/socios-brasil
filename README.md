@@ -117,6 +117,20 @@ problema é de 2.419 (valor obtido rodando a consulta
 `SELECT COUNT(DISTINCT(cnpj)) FROM socios WHERE qualificacao_socio = 'INVÁLIDA';`).
 
 
+#### Cadastro incompleto de filiais
+
+CNPJs de filiais nem sempre aparecem, exemplo: o CNPJ 36357994000145 (matriz,
+razão social: INTERFOOD IMPORTACAO LTDA) aparece no arquivo de São Paulo, mas o
+CNPJ 36357994000226 (filial) não aparece, mas ambos aparecem no [site de
+Comprovante de Inscrição e de Situação Cadastral da Receita
+Federal](https://www.receita.fazenda.gov.br/pessoajuridica/cnpj/cnpjreva/cnpjreva_solicitacao2.asp).
+
+No total, constam 2.010 empresas na base que não são matriz, ou seja, possuem
+[o sufixo](https://pt.wikipedia.org/wiki/Cadastro_Nacional_da_Pessoa_Jur%C3%ADdica#Formato)
+diferente de `0001` (valor obtido pela consulta
+`SELECT COUNT(*) AS quantidade FROM empresas WHERE SUBSTR(cnpj, 9, 4) != '0001';`).
+
+
 #### Empresas com razão social em branco
 
 Duas empresas possuem razão social em branco, ambas de São Paulo. Os CNPJs são
@@ -130,13 +144,8 @@ Valores obtidos rodando a consulta:
 
 - Alguns CNPJs não constam nos arquivos (como EI, MEI e de candidatos e
   empresas inativas), tornando a base incompleta e de difícil cruzamento com
-  outras bases, principalmente quanto a dados históricos. Não foi possível
-  verificar detalhadamente, mas suspeita-se que CNPJs de filiais nem sempre
-  aparecem, exemplo: o CNPJ 36357994000145 (matriz, razão social: INTERFOOD
-  IMPORTACAO LTDA) aparece no arquivo de São Paulo, mas o CNPJ 36357994000226
-  (filial) não aparece, mas ambos aparecem no [site de Comprovante de Inscrição
-  e de Situação Cadastral da Receita
-  Federal](https://www.receita.fazenda.gov.br/pessoajuridica/cnpj/cnpjreva/cnpjreva_solicitacao2.asp);
+  outras bases, principalmente quanto a dados históricos (não possui cadastro
+  de empresas inativas, por exemplo).
 - Essa base de dados não possui mais informações das empresas, como lista de
   CNAEs e endereço (que estão disponíveis apenas através de consultas
   no site da Receita Federal, onde é necessário preencher um CAPTCHA).
