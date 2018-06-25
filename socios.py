@@ -13,6 +13,7 @@ from pathlib import Path
 import requests
 import rows
 from lxml.html import document_fromstring
+from tqdm import tqdm
 
 
 TIPOS_PESSOAS = {
@@ -23,35 +24,35 @@ TIPOS_PESSOAS = {
 QUALIFICACOES = {f'{row.codigo:02d}': row.descricao
                  for row in rows.import_from_csv('qualificacao-socio.csv')}
 UNIDADES_FEDERATIVAS = {
-    'Acre': 'AC',
-    'Alagoas': 'AL',
-    'Amapá': 'AP',
-    'Amazonas': 'AM',
-    'Bahia': 'BA',
-    'Ceará': 'CE',
-    'Distrito Federal': 'DF',
-    'Espírito Santo': 'ES',
-    'Goiás': 'GO',
-    'Maranhão': 'MA',
-    'Mato Grosso': 'MT',
-    'Mato Grosso do Sul': 'MS',
-    'Minas Gerais': 'MG',
-    'Paraná': 'PR',
-    'Paraíba': 'PB',
-    'Pará': 'PA',
-    'Pernambuco': 'PE',
-    'Piauí': 'PI',
-    'Rio Grande do Norte': 'RN',
-    'Rio Grande do Sul': 'RS',
-    'Rio de Janeiro': 'RJ',
-    'Rondônia': 'RO',
-    'Roraima': 'RR',
-    'Santa Catarina': 'SC',
-    'Sergipe': 'SE',
-    'São Paulo': 'SP',
-    'Tocantins': 'TO',
+    'acre': 'AC',
+    'alagoas': 'AL',
+    'amapá': 'AP',
+    'amazonas': 'AM',
+    'bahia': 'BA',
+    'ceará': 'CE',
+    'distrito federal': 'DF',
+    'espírito santo': 'ES',
+    'goiás': 'GO',
+    'maranhão': 'MA',
+    'mato grosso': 'MT',
+    'mato grosso do sul': 'MS',
+    'minas gerais': 'MG',
+    'paraná': 'PR',
+    'paraíba': 'PB',
+    'pará': 'PA',
+    'pernambuco': 'PE',
+    'piauí': 'PI',
+    'rio grande do norte': 'RN',
+    'rio grande do sul': 'RS',
+    'rio de janeiro': 'RJ',
+    'rondônia': 'RO',
+    'roraima': 'RR',
+    'santa catarina': 'SC',
+    'sergipe': 'SE',
+    'são paulo': 'SP',
+    'tocantins': 'TO',
 }
-HEADER_COMPANIES = ('cnpj', 'razao_social')
+HEADER_COMPANIES = ('cnpj', 'razao_social', 'uf')
 HEADER_PARTNERS = (
     'cnpj', 'razao_social', 'codigo_tipo_socio', 'tipo_socio',
     'cpf_cnpj_socio', 'codigo_qualificacao_socio', 'qualificacao_socio',
@@ -89,7 +90,7 @@ def create_download_script(filename='download.sh',
         fobj.write('#!/bin/sh\n')
         fobj.write(f'# Arquivo gerado em {today.year}-{today.month}-{today.day}\n')
         fobj.write('# Visite o site da Receita Federal para verificar se existem atualizações.\n\n')
-        fobj.write('mkdir -p download\n\n')
+        fobj.write('mkdir -p {}\n\n'.format(str(download_path)))
         for row in links:
             path = download_path / (row.uf + '.txt')
             fobj.write(f'wget -O "{path}" "{row.url}"\n')
@@ -107,11 +108,21 @@ def parse_company(line):
     }
 
 
+def _uf_from_filename(filename):
+    uf = Path(filename).name.split('.')[0].split('-')[-1]
+    if len(uf) > 2:
+        uf = UNIDADES_FEDERATIVAS[uf.lower()]
+    return uf.upper()
+
+
 def read_companies_rfb(filename, encoding):
+    uf = _uf_from_filename(filename)
     with open(filename, encoding=encoding) as fobj:
         for line in fobj:
             if line.startswith('01'):
-                yield parse_company(line)
+                company = parse_company(line)
+                company['uf'] = uf
+                yield company
 
 
 def parse_partner(line):
@@ -192,7 +203,6 @@ def convert_file(filename, output_companies, output_partners,
 
 def convert_file_parallel(arg):
     filename, output_companies, output_partners = arg
-    print(f'Converting {filename} into {output_companies} and {output_partners}...')
     convert_file(filename, output_companies, output_partners)
 
 
@@ -202,8 +212,8 @@ def convert_all(wildcard, output_path):
         output_path.mkdir()
 
     args = []
-    for filename in sorted(glob.glob(wildcard)):
-        uf = UNIDADES_FEDERATIVAS[Path(filename).name.replace('.txt', '')]
+    for filename in tqdm(sorted(glob.glob(wildcard), reverse=True)):
+        uf = _uf_from_filename(filename)
         output_companies = output_path / Path(f'empresas-{uf}.csv.xz')
         output_partners = output_path / Path(f'socios-{uf}.csv.xz')
         args.append((filename, output_companies, output_partners))
@@ -215,24 +225,22 @@ def convert_all(wildcard, output_path):
 def merge_partner_files(wildcard, output, input_encoding='utf-8',
                         output_encoding='utf-8'):
     output = Path(output)
-    header = list(HEADER_PARTNERS) + ['uf']
+    header = list(HEADER_PARTNERS)
 
     with lzma.open(output, mode='w') as fobj:
         fobj = io.TextIOWrapper(fobj, encoding=output_encoding)
         writer = csv.DictWriter(fobj, fieldnames=header, lineterminator='\n')
         writer.writeheader()
 
-        for filename in sorted(glob.glob(wildcard)):
+        for filename in tqdm(sorted(glob.glob(wildcard))):
             if 'links' in filename.lower() or 'brasil' in filename.lower():
                 continue
 
-            print(f'Merging {filename}...')
-            uf = Path(filename).name.replace('.csv', '').replace('.xz', '').split('-')[-1]
+            uf = _uf_from_filename(filename)
             with lzma.open(filename) as fobj_uf:
                 fobj_uf = io.TextIOWrapper(fobj_uf, encoding=input_encoding)
                 reader = csv.DictReader(fobj_uf)
                 for row in reader:
-                    row['uf'] = uf
                     writer.writerow(row)
 
 
@@ -248,7 +256,7 @@ def fix_partner_file(filename, output, input_encoding='utf-8',
                      output_encoding='utf-8'):
     companies = read_companies(filename, input_encoding)
 
-    header = list(HEADER_PARTNERS) + ['uf']
+    header = list(HEADER_PARTNERS)
     with lzma.open(filename) as fobj_read, \
          lzma.open(output, mode='w') as fobj_write:
         fobj_read = io.TextIOWrapper(fobj_read, encoding=input_encoding)
@@ -257,7 +265,7 @@ def fix_partner_file(filename, output, input_encoding='utf-8',
         writer = csv.DictWriter(fobj_write, fieldnames=header,
                                 lineterminator='\n')
         writer.writeheader()
-        for row in reader:
+        for row in tqdm(reader):
             document = row['cpf_cnpj_socio']
             if document in companies:
                 row['nome_socio'] = companies[document]
@@ -288,7 +296,7 @@ def extract_company_company_partnerships(filename, output,
         writer = csv.DictWriter(fobj_write, fieldnames=header,
                                 lineterminator='\n')
         writer.writeheader()
-        for row in reader:
+        for row in tqdm(reader):
             document = row['cpf_cnpj_socio']
             if document and len(document) == 14:
                 partner = {
@@ -355,10 +363,8 @@ def main():
         input_filename = Path(args.input_filename or 'output/pre-socios-brasil.csv.xz')
         output_filename = Path(args.output_filename or 'output/socios-brasil.csv.xz')
 
-        print(f'Fixing file "{input_filename}" into {output_filename}... ', end='',
-                flush=True)
+        print(f'Fixing file "{input_filename}" into {output_filename}... ')
         fix_partner_file(input_filename, output_filename)
-        print('done.')
 
     elif args.command == 'extract-companies':
         input_filename = Path(args.input_filename or 'output/socios-brasil.csv.xz')
