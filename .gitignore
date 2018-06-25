@@ -13,6 +13,5 @@ MANIFEST
 build/*
 dist/*
 download.sh
-download/*
-output/*
+data/*
 reg_settings.py

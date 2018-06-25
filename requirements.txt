@@ -1,3 +1,6 @@
+click
+git+https://github.com/turicas/rows.git@develop#egg=rows
 lxml
 requests
-rows
+requests-cache
+tqdm
