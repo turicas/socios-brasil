@@ -73,11 +73,11 @@ def discover_links():
     return links
 
 
-def create_download_script(filename='download.sh',
-                           output_path=Path('output'),
-                           download_path=Path('download')):
-    if not download_path.exists():
-        download_path.mkdir()
+def create_download_script(filename=Path('data/download.sh'),
+                           output_path=Path('data/output'),
+                           download_path=Path('data/download')):
+    if not filename.parent.exists():
+        filename.parent.mkdir()
     if not output_path.exists():
         output_path.mkdir()
 
@@ -147,7 +147,7 @@ def read_partners(filename, encoding):
                 yield parse_partner(line)
 
 
-def extract_companies(filename, output, input_encoding, output_encoding):
+def extract_companies(filenames, output, input_encoding, output_encoding):
     with lzma.open(output, mode='w') as fobj:
         fobj = io.TextIOWrapper(fobj, encoding=output_encoding)
         writer = csv.DictWriter(
@@ -157,9 +157,10 @@ def extract_companies(filename, output, input_encoding, output_encoding):
         )
         writer.writeheader()
         company_names = {}
-        for company in read_companies_rfb(filename, input_encoding):
-            company_names[company['cnpj']] = company['razao_social']
-            writer.writerow(company)
+        for filename in tqdm(filenames):
+            for company in read_companies_rfb(filename, input_encoding):
+                company_names[company['cnpj']] = company['razao_social']
+                writer.writerow(company)
 
     return company_names
 
@@ -172,7 +173,7 @@ def convert_file(filename, output_companies, output_partners,
         output_partners.parent.mkdir()
 
     company_names = extract_companies(
-        filename,
+        [filename],
         output_companies,
         input_encoding,
         output_encoding,
@@ -272,20 +273,8 @@ def fix_partner_file(filename, output, input_encoding='utf-8',
             writer.writerow(row)
 
 
-def extract_companies(filename, output, input_encoding='utf-8',
-                      output_encoding='utf-8'):
-    companies = read_companies(filename, input_encoding)
-    with lzma.open(output, mode='w') as fobj:
-        fobj = io.TextIOWrapper(fobj, encoding=output_encoding)
-        writer = csv.writer(fobj)
-        writer.writerow(['cnpj', 'razao_social'])
-        for document, name in companies.items():
-            writer.writerow([document, name])
-
-
-def extract_company_company_partnerships(filename, output,
-                                         input_encoding='utf-8',
-                                         output_encoding='utf-8'):
+def extract_holdings(filename, output, input_encoding='utf-8',
+                     output_encoding='utf-8'):
 
     header = ['cnpj', 'razao_social', 'cnpj_socia', 'qualificacao_socia',
               'razao_social_socia']
@@ -315,8 +304,7 @@ def main():
         'command',
         choices=['create-download-script', 'convert-all',
                  'merge-partner-files', 'extract-companies',
-                 'convert-file', 'fix-partner-file',
-                 'extract-company-company-partnerships']
+                 'convert-file', 'fix-partner-file', 'extract-holdings']
     )
     parser.add_argument('--input-filename')
     parser.add_argument('--output-filename')
@@ -328,7 +316,7 @@ def main():
         print('Downloading links...', end='', flush=True)
         create_download_script()
         print(' done.')
-        print('Run "download.sh" to download files, then run "convert-all".')
+        print('Run "data/download.sh" to download files, then run "convert-all".')
 
     elif args.command == 'convert-file':
         if None in (args.input_filename, args.output_companies_filename,
@@ -352,33 +340,40 @@ def main():
 
     elif args.command == 'convert-all':
         print('Converting all files in "download"...')
-        convert_all('download/*.txt', 'output')
+        convert_all('data/download/*.txt', 'data/output')
         print('Done.')
 
     elif args.command == 'merge-partner-files':
         print('Merging partner files in "output"...')
-        merge_partner_files('output/socios-*.csv.xz', 'output/pre-socios-brasil.csv.xz')
+        merge_partner_files('data/output/socios-*.csv.xz', 'data/output/pre-socios.csv.xz')
 
     elif args.command == 'fix-partner-file':
-        input_filename = Path(args.input_filename or 'output/pre-socios-brasil.csv.xz')
-        output_filename = Path(args.output_filename or 'output/socios-brasil.csv.xz')
+        input_filename = Path(args.input_filename or 'data/output/pre-socios.csv.xz')
+        output_filename = Path(args.output_filename or 'data/output/socios.csv.xz')
 
         print(f'Fixing file "{input_filename}" into {output_filename}... ')
         fix_partner_file(input_filename, output_filename)
 
     elif args.command == 'extract-companies':
-        input_filename = Path(args.input_filename or 'output/socios-brasil.csv.xz')
-        output_filename = Path(args.output_filename or 'output/empresas-brasil.csv.xz')
-        extract_companies(input_filename, output_filename)
+        if args.input_filename:
+            filenames = [Path(args.input_filename)]
+        else:
+            filenames = [Path(filename)
+                         for filename in glob.glob('data/download/*.txt')]
+        output_filename = Path(args.output_filename or 'data/output/empresas.csv.xz')
+        extract_companies(
+            filenames,
+            output_filename,
+            'iso-8859-15',
+            'utf-8',
+        )
 
-    elif args.command == 'extract-company-company-partnerships':
-        input_filename = Path(args.input_filename or 'output/socios-brasil.csv.xz')
-        output_filename = Path(args.output_filename or 'output/empresas-socias.csv.xz')
+    elif args.command == 'extract-holdings':
+        input_filename = Path(args.input_filename or 'data/output/socios.csv.xz')
+        output_filename = Path(args.output_filename or 'data/output/holdings.csv.xz')
 
-        print(f'Extracting company-company partnerships from "{input_filename}" into {output_filename}... ',
-              end='', flush=True)
-        extract_company_company_partnerships(input_filename, output_filename)
-        print('done.')
+        print(f'Extracting holdings from "{input_filename}" into {output_filename}... ')
+        extract_holdings(input_filename, output_filename)
 
 
 if __name__ == '__main__':
