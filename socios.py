@@ -194,11 +194,11 @@ def convert_file(filename, output_companies, output_partners,
         for partner in read_partners(filename, encoding=input_encoding):
             partner['razao_social'] = company_names[partner['cnpj']]
             # If the partner is a company, try to fix its name
-            document = partner['cpf_cnpj_socio']
-            if document and len(document) == 14:
+            if partner['tipo_socio'] != 'Pessoa Física':
+                document = partner['cpf_cnpj_socio']
                 partner['nome_socio'] = company_names.get(
                     document,
-                    f"? {partner['qualificacao_socio']} ({partner['cpf_cnpj_socio']})"
+                    f"? {partner['qualificacao_socio']} ({document})"
                 )
             writer.writerow(partner)
 
@@ -287,8 +287,7 @@ def extract_holdings(filename, output, input_encoding='utf-8',
                                 lineterminator='\n')
         writer.writeheader()
         for row in tqdm(reader):
-            document = row['cpf_cnpj_socio']
-            if document and len(document) == 14:
+            if partner['tipo_socio'] != 'Pessoa Física':
                 partner = {
                     'cnpj': row['cnpj'],
                     'razao_social': row['razao_social'],
