@@ -158,7 +158,8 @@ def extract_companies(filenames, output, input_encoding, output_encoding):
         writer.writeheader()
         company_names = {}
         for filename in filenames:
-            for company in tqdm(read_companies_rfb(filename, input_encoding)):
+            companies = read_companies_rfb(filename, input_encoding)
+            for company in tqdm(companies, desc=filename.name):
                 company_names[company['cnpj']] = company['razao_social']
                 writer.writerow(company)
 
