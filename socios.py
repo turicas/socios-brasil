@@ -218,7 +218,7 @@ def convert_all(wildcard, output_path):
         uf = _uf_from_filename(filename)
         output_companies = output_path / Path(f'empresas-{uf}.csv.xz')
         output_partners = output_path / Path(f'socios-{uf}.csv.xz')
-        args.append((filename, output_companies, output_partners))
+        args.append((Path(filename), output_companies, output_partners))
 
     with Pool() as pool:
         pool.map(convert_file_parallel, args)
