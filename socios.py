@@ -287,7 +287,7 @@ def extract_holdings(filename, output, input_encoding='utf-8',
                                 lineterminator='\n')
         writer.writeheader()
         for row in tqdm(reader):
-            if partner['tipo_socio'] != 'Pessoa Física':
+            if row['tipo_socio'] != 'Pessoa Física':
                 partner = {
                     'cnpj': row['cnpj'],
                     'razao_social': row['razao_social'],
