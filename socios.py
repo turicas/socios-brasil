@@ -128,12 +128,15 @@ def read_companies_rfb(filename, encoding):
 def parse_partner(line):
     tipo, cnpj, codigo_tipo_socio = line[:2], line[2:16], line[16:17]
     cpf_cnpj, codigo_qualificacao, nome = line[17:31], line[31:33], line[33:]
+    cpf_cnpj = cpf_cnpj.strip() or None
+    if set(cpf_cnpj) == {'0'}:
+        cpf_cnpj = None
     assert tipo == '02'
     return {
         'cnpj': cnpj,
         'codigo_tipo_socio': codigo_tipo_socio,
         'tipo_socio': TIPOS_PESSOAS[codigo_tipo_socio],
-        'cpf_cnpj_socio': cpf_cnpj.strip() or None,
+        'cpf_cnpj_socio': cpf_cnpj,
         'codigo_qualificacao_socio': codigo_qualificacao.strip(),
         'qualificacao_socio': QUALIFICACOES.get(codigo_qualificacao, 'INVÁLIDA'),
         'nome_socio': nome.strip(),
