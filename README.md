@@ -9,6 +9,16 @@ detalhes](http://dados.gov.br/noticia/governo-federal-disponibiliza-os-dados-abe
 
 ## Dados
 
+Existem dois tipos de dados:
+
+- Os dados publicados pela RFB para qualquer um, que não possuem informações
+  como CNAEs, endereços das empresas e CPFs (parciais) dos sócios;
+- Os dados resultantes de um pedido de acesso à informação, que possuem as
+  informações completas.
+
+Para o primeiro caso, siga as instruções abaixo, para o segundo caso, leia
+[essa seção][#dump-rfb].
+
 **[Acesse diretamente os dados
 convertidos](https://drive.google.com/open?id=1tOGB1mJZcF5V1SUS-YlPJF0-zdhfN1yd)**
 caso você não queira/possa rodar o script. Na pasta `output` você encontrará os
@@ -358,3 +368,21 @@ Total: 4,8 GB.
 
 Se você usa R, veja o
 [RFBCNPJ](http://curso-r.com/blog/2018/05/13/2018-05-13-rfbcnpj/).
+
+
+## Dump RFB
+
+Instale as dependências:
+
+```bash
+pip install -r requirements.txt
+```
+
+Baixe o arquivo zip fornecido pela RFB.
+
+Crie um diretório para os arquivos-saída e execute o script:
+
+```bash
+mkdir -p data/output/
+python extract_dump.py ~/Downloads/F.K032001K.D81106A.zip data/output/
+```
