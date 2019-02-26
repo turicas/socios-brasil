@@ -17,7 +17,7 @@ Existem dois tipos de dados:
   informações completas.
 
 Para o primeiro caso, siga as instruções abaixo, para o segundo caso, leia
-[essa seção][#dump-rfb].
+[essa seção](#dump-rfb).
 
 **[Acesse diretamente os dados
 convertidos](https://drive.google.com/open?id=1tOGB1mJZcF5V1SUS-YlPJF0-zdhfN1yd)**
