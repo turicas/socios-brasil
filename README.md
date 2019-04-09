@@ -2,7 +2,7 @@
 
 Script que baixa todos os dados de sócios das empresas brasileiras [disponíveis
 no site da Receita
-Federal](http://idg.receita.fazenda.gov.br/orientacao/tributaria/cadastros/cadastro-nacional-de-pessoas-juridicas-cnpj/dados-abertos-do-cnpj),
+Federal](https://receita.economia.gov.br/orientacao/tributaria/cadastros/cadastro-nacional-de-pessoas-juridicas-cnpj/dados-publicos-cnpj),
 extrai, conserta [alguns erros](#Erros) e converte para CSV. [Veja mais
 detalhes](http://dados.gov.br/noticia/governo-federal-disponibiliza-os-dados-abertos-do-cadastro-nacional-da-pessoa-juridica).
 
