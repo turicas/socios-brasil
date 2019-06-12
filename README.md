@@ -75,6 +75,14 @@ e [PostgreSQL](#postgresql) abaixo).
 > Nota 2: a codificação de caracteres original é ISO-8859-15, mas o script gera
 > os arquivos CSV em UTF-8.
 
+### Privacidade
+
+Para garantir a privacidade de algumas pessoas e evitar SPAM, o script
+deleta/limpa algumas colunas com informações sensíveis. Essa será a forma
+padrão de funcionamento para não facilitar a exposição desses dados (em breve
+[será adicionada uma opção para extrair completametne os
+dados](https://github.com/turicas/socios-brasil/issues/23)).
+
 
 ## Rodando
 
