@@ -273,7 +273,7 @@ def parse_row(header, line):
 
 
 def extract_files(
-    filename,
+    filenames,
     header_definitions,
     transform_functions,
     output_writers,
@@ -282,40 +282,44 @@ def extract_files(
 ):
     """Extract files from a fixed-width file containing more than one row type
 
-    The input filename is expected to be a zip file having only one file
-    inside. The file is read and metadata inside `fobjs` is used to parse it
-    and save the output files.
+    `filenames` is expected to be a list of ZIP files having only one file
+    inside each. The file is read and metadata inside `fobjs` is used to parse
+    it and save the output files.
     """
-    # TODO: use another strategy to open this file (like using rows'
-    # open_compressed)
-    zf = ZipFile(filename)
-    filenames = zf.filelist
-    assert (
-        len(filenames) == 1
-    ), f"Only one file inside the zip is expected (got {len(filenames)})"
-    # XXX: The current approach of decoding here and then extracting
-    # fixed-width-file data will work only for encodings where 1 character is
-    # represented by 1 byte, such as latin1. If the encoding can represent one
-    # character using more than 1 byte (like UTF-8), this approach will make
-    # incorrect results.
-    fobj = io.TextIOWrapper(zf.open(filenames[0]), encoding=input_encoding)
-
     error_fobj = open_compressed(error_filename, mode="w", encoding="latin1")
     error_writer = CsvLazyDictWriter(error_fobj)
-    for line in tqdm(fobj):
-        row_type = line[0]
-        try:
-            row = parse_row(header_definitions[row_type], line)
-        except ParsingError as exception:
-            error_writer.writerow({"error": exception.error, "line": exception.line})
-            continue
 
-        data = transform_functions[row_type](row)
-        for row in data:
-            output_writers[row_type].writerow(row)
+    for filename in filenames:
+        # TODO: use another strategy to open this file (like using rows'
+        # open_compressed)
+        zf = ZipFile(filename)
+        inner_filenames = zf.filelist
+        assert (
+            len(inner_filenames) == 1
+        ), f"Only one file inside the zip is expected (got {len(inner_filenames)})"
+        # XXX: The current approach of decoding here and then extracting
+        # fixed-width-file data will work only for encodings where 1 character is
+        # represented by 1 byte, such as latin1. If the encoding can represent one
+        # character using more than 1 byte (like UTF-8), this approach will make
+        # incorrect results.
+        fobj = io.TextIOWrapper(zf.open(inner_filenames[0]), encoding=input_encoding)
+        for line in tqdm(fobj, desc=f"Extracting {filename}"):
+            row_type = line[0]
+            try:
+                row = parse_row(header_definitions[row_type], line)
+            except ParsingError as exception:
+                error_writer.writerow(
+                    {"error": exception.error, "line": exception.line}
+                )
+                continue
+
+            data = transform_functions[row_type](row)
+            for row in data:
+                output_writers[row_type].writerow(row)
+        fobj.close()
+        zf.close()
+
     error_fobj.close()
-    fobj.close()
-    zf.close()
 
 
 def main():
@@ -324,13 +328,13 @@ def main():
     error_filename = output_path / "errors.csv"
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("input_filename")
     parser.add_argument("output_path", default=str(output_path))
+    parser.add_argument("input_filenames", nargs="+")
     args = parser.parse_args()
 
     input_encoding = "latin1"
     output_encoding = "utf-8"
-    input_filename = args.input_filename
+    input_filenames = args.input_filenames
     output_path = Path(args.output_path)
     if not output_path.exists():
         output_path.mkdir(parents=True)
@@ -369,7 +373,7 @@ def main():
         output_writers[row_type] = CsvLazyDictWriter(data["output_filename"])
         transform_functions[row_type] = data["transform_function"]
     extract_files(
-        filename=input_filename,
+        filenames=input_filenames,
         header_definitions=header_definitions,
         transform_functions=transform_functions,
         output_writers=output_writers,
