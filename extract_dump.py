@@ -1,4 +1,6 @@
-"""Extrai os dados do dump do QSA da Receita Federal
+#!/usr/bin/env python3
+"""
+Extrai os dados do dump do QSA da Receita Federal
 
 O arquivo de origem usado tem o nome "F.K032001K.D81106A.zip", mas pode ser
 especificado qualquer arquivo de origem que siga o mesmo padrão - esse arquivo
@@ -19,14 +21,60 @@ dataset em https://brasil.io/ e baixe os dados:
 """
 
 import argparse
-import glob
 import io
-import pathlib
-import zipfile
+from zipfile import ZipFile
+from pathlib import Path
 
 import rows
-import rows.utils
+from rows.fields import slug
+from rows.plugins.utils import ipartition
+from rows.utils import CsvLazyDictWriter, open_compressed
 from tqdm import tqdm
+
+
+# Fields to delete/clean in some cases so we don't expose personal information
+# TODO: add option to not delete/clear these fields
+fields_to_delete = ("codigo_pais", "correio_eletronico", "filler", "nome_pais")
+fields_to_clear_if_mei = (
+    "complemento",
+    "ddd_fax",
+    "ddd_telefone_1",
+    "ddd_telefone_2",
+    "descricao_tipo_logradouro",
+    "logradouro",
+    "numero",
+)
+
+
+class ParsingError(ValueError):
+    def __init__(self, line, error):
+        super().__init__()
+        self.line = line
+        self.error = error
+
+
+def clear_company_name(name):
+    """
+    >>> clear_company_name('FALANO DE TAL 12345678901')
+    'FALANO DE TAL'
+    >>> clear_company_name('FALANO DE TAL CPF 12345678901')
+    'FALANO DE TAL'
+    >>> clear_company_name('FALANO DE TAL - CPF 12345678901')
+    'FALANO DE TAL'
+    >>> clear_company_name('123456')
+    '123456'
+    """
+    if name.isdigit():  # Weird name, but not an "eupresa"
+        return name
+
+    words = name.split()
+    if words[-1].isdigit() and len(words[-1]) == 11:  # Remove CPF (numbers)
+        words.pop()
+    if words[-1].upper() == "CPF":  # Remove CPF (word)
+        words.pop()
+    if words[-1] == "-":
+        words.pop()
+    return " ".join(words).strip()
 
 
 def clear_email(email):
@@ -78,7 +126,96 @@ def read_header(filename):
 
     table = rows.import_from_csv(filename)
     table.order_by("start_column")
-    return table
+    header = []
+    for row in table:
+        row = dict(row._asdict())
+        row["field_name"] = slug(row["name"])
+        row["start_index"] = row["start_column"] - 1
+        row["end_index"] = row["start_index"] + row["size"]
+        header.append(row)
+    return header
+
+
+def transform_empresa(row):
+    """Transform row of type company"""
+
+    row["correio_eletronico"] = clear_email(row["correio_eletronico"])
+
+    if row["opcao_pelo_simples"] in ("", "0", "6", "8"):
+        row["opcao_pelo_simples"] = "0"
+    elif row["opcao_pelo_simples"] in ("5", "7"):
+        row["opcao_pelo_simples"] = "1"
+    else:
+        raise ValueError(
+            f"Opção pelo Simples inválida: {row['opcao_pelo_simples']} (CNPJ: {row['cnpj']})"
+        )
+
+    if set(row["nome_fantasia"]) == set(["0"]):
+        row["nome_fantasia"] = ""
+
+    if row["opcao_pelo_mei"] in ("N", ""):
+        row["opcao_pelo_mei"] = "0"
+    elif row["opcao_pelo_mei"] == "S":
+        row["opcao_pelo_mei"] = "1"
+
+        # Clear CPF from razao_social/nome_fantasia
+        if row["razao_social"].split()[-1].isdigit():
+            row["razao_social"] = clear_company_name(row["razao_social"])
+        if row["nome_fantasia"] and row["nome_fantasia"].split()[-1].isdigit():
+            row["nome_fantasia"] = clear_company_name(row["nome_fantasia"])
+
+        # Clear all fields which can expose personal info
+        for field_name in fields_to_clear_if_mei:
+            row[field_name] = ""
+
+    else:
+        raise ValueError(
+            f"Opção pelo MEI inválida: {row['opcao_pelo_mei']} (CNPJ: {row['cnpj']})"
+        )
+
+    # Clear all fields which can expose sensitive info
+    for field_name in fields_to_delete:
+        if field_name in row:
+            del row[field_name]
+
+    return [row]
+
+
+def transform_socio(row):
+    """Transform row of type partner"""
+
+    assert row["campo_desconhecido"] == ""  # Always empty
+    del row["campo_desconhecido"]
+
+    if row["nome_representante_legal"] == "CPF INVALIDO":
+        row["cpf_representante_legal"] = None
+        row["nome_representante_legal"] = None
+        row["codigo_qualificacao_representante_legal"] = None
+
+    if row["cnpj_cpf_do_socio"] == "000***000000**":
+        row["cnpj_cpf_do_socio"] = ""
+
+    if row["identificador_de_socio"] == 2:  # Pessoa Física
+        row["cnpj_cpf_do_socio"] = row["cnpj_cpf_do_socio"][-11:]
+
+    return [row]
+
+
+def transform_cnae_secundaria(row):
+    """Transform row of type CNAE"""
+
+    cnaes = [
+        "".join(digits)
+        for digits in ipartition(row.pop("cnae"), 7)
+        if set(digits) != set(["0"])
+    ]
+    data = []
+    for cnae in cnaes:
+        new_row = row.copy()
+        new_row["cnae"] = cnae
+        data.append(new_row)
+
+    return data
 
 
 def parse_row(header, line):
@@ -92,102 +229,152 @@ def parse_row(header, line):
        character equals to one byte. If the input encoding does not have this
        characteristic then this function needs to be changed.
     """
-
     line = line.replace("\x00", " ").replace("\x02", " ")
     row = {}
     for field in header:
-        field_name = rows.utils.slug(field.name)
-        start_index = field.start_column - 1
-        end_index = start_index + field.size
-        value = line[start_index:end_index].strip()
+        field_name = field["field_name"]
+        value = line[field["start_index"] : field["end_index"]].strip()
 
         if field_name == "filler":
             if value.strip() not in ("", "9999999999999999"):
-                print('ERROR parsing filler on line:')
-                print(repr(line))
-            continue
+                raise ParsingError(line=line, error="Wrong filler")
+            continue  # Do not save `filler`
         elif field_name in ("tipo_de_registro", "tipo_do_registro"):
             row_type = value
-            continue
+            continue  # Do not save row type (will be saved in separate files)
         elif field_name in ("fim", "fim_registro", "fim_de_registro"):
             if value.strip() != "F":
-                print('ERROR parsing end of row on line:')
-                print(repr(line))
-            continue
+                raise ParsingError(line=line, error="Wrong end")
+            continue  # Do not save row end mark
+        elif field_name in (
+            "indicador_full_diario",
+            "tipo_atualizacao",
+            "tipo_de_atualizacao",
+        ):
+            continue  # These fields are usually useless
 
         if field_name.startswith("data_") and value:
+            if len(str(value)) > 8:
+                raise ParsingError(line=line, error="Wrong date size")
             value = f"{value[:4]}-{value[4:6]}-{value[6:8]}"
-        elif field.type == "N" and "*" not in value:
-            value = int(value) if value else None
+            if value == "0000-00-00":
+                value = ""
+        elif field["type"] == "N" and "*" not in value:
+            try:
+                value = int(value) if value else None
+            except ValueError:
+                raise ParsingError(
+                    line=line, error=f"Cannot convert {repr(value)} to int"
+                )
 
         row[field_name] = value
-
-    if row_type == "1":  # empresa
-        row["correio_eletronico"] = clear_email(row["correio_eletronico"])
-
-    elif row_type == "2":  # socio
-        del row["campo_desconhecido"]  # Always empty
-        if row["nome_representante"] == "CPF INVALIDO":
-            row["cpf_representante_legal"] = None
-            row["nome_representante"] = None
-            row["codigo_qualificacao_representante_legal"] = None
-
-    elif row_type == "6":  # cnae
-        if set(row["campo_desconhecido"]) == {"0"}:
-            row["campo_desconhecido"] = None
 
     return row
 
 
-def extract_files(filename, header_fobjs, output_writers, input_encoding="latin1"):
+def extract_files(
+    filename,
+    header_definitions,
+    transform_functions,
+    output_writers,
+    error_filename,
+    input_encoding="latin1",
+):
     """Extract files from a fixed-width file containing more than one row type
 
     The input filename is expected to be a zip file having only one file
     inside. The file is read and metadata inside `fobjs` is used to parse it
     and save the output files.
     """
-
-    zf = zipfile.ZipFile(filename)
+    # TODO: use another strategy to open this file (like using rows'
+    # open_compressed)
+    zf = ZipFile(filename)
     filenames = zf.filelist
     assert (
         len(filenames) == 1
     ), f"Only one file inside the zip is expected (got {len(filenames)})"
-    # TODO: read the contents as bytes, not str (decode just before writing -
-    # slower but will work for files using an encoding where number of
-    # characters is different from number of bytes).
+    # XXX: The current approach of decoding here and then extracting
+    # fixed-width-file data will work only for encodings where 1 character is
+    # represented by 1 byte, such as latin1. If the encoding can represent one
+    # character using more than 1 byte (like UTF-8), this approach will make
+    # incorrect results.
     fobj = io.TextIOWrapper(zf.open(filenames[0]), encoding=input_encoding)
+
+    error_fobj = open_compressed(error_filename, mode="w", encoding="latin1")
+    error_writer = CsvLazyDictWriter(error_fobj)
     for line in tqdm(fobj):
         row_type = line[0]
-        row = parse_row(header_fobjs[row_type], line)
-        output_writers[row_type].writerow(row)
+        try:
+            row = parse_row(header_definitions[row_type], line)
+        except ParsingError as exception:
+            error_writer.writerow({"error": exception.error, "line": exception.line})
+            continue
+
+        data = transform_functions[row_type](row)
+        for row in data:
+            output_writers[row_type].writerow(row)
+    error_fobj.close()
+    fobj.close()
+    zf.close()
 
 
 def main():
+    base_path = Path(__file__).parent
+    output_path = base_path / "data" / "output"
+    error_filename = output_path / "errors.csv"
+
     parser = argparse.ArgumentParser()
     parser.add_argument("input_filename")
-    parser.add_argument("output_path")
+    parser.add_argument("output_path", default=str(output_path))
     args = parser.parse_args()
 
     input_encoding = "latin1"
     output_encoding = "utf-8"
     input_filename = args.input_filename
-    output_path = pathlib.Path(args.output_path)
+    output_path = Path(args.output_path)
     if not output_path.exists():
         output_path.mkdir(parents=True)
+    error_filename = output_path / "error.csv.gz"
 
     row_types = {
-        "0": ("headers/header.csv", output_path / "header.csv.gz"),
-        "1": ("headers/dados-cadastrais.csv", output_path / "empresa.csv.gz"),
-        "2": ("headers/socios.csv", output_path / "socio.csv.gz"),
-        "6": ("headers/cnaes.csv", output_path / "empresa-cnae.csv.gz"),
-        "9": ("headers/trailler.csv", output_path / "trailler.csv.gz"),
+        "0": {
+            "header_filename": "headers/header.csv",
+            "output_filename": output_path / "header.csv.gz",
+            "transform_function": lambda row: [row],
+        },
+        "1": {
+            "header_filename": "headers/empresa.csv",
+            "output_filename": output_path / "empresa.csv.gz",
+            "transform_function": transform_empresa,
+        },
+        "2": {
+            "header_filename": "headers/socio.csv",
+            "output_filename": output_path / "socio.csv.gz",
+            "transform_function": transform_socio,
+        },
+        "6": {
+            "header_filename": "headers/cnae-secundaria.csv",
+            "output_filename": output_path / "cnae-secundaria.csv.gz",
+            "transform_function": transform_cnae_secundaria,
+        },
+        "9": {
+            "header_filename": "headers/trailler.csv",
+            "output_filename": output_path / "trailler.csv.gz",
+            "transform_function": lambda row: [row],
+        },
     }
-    header_fobjs, output_writers = {}, {}
-    for row_type, (header_filename, output_filename) in row_types.items():
-        header_fobjs[row_type] = read_header(header_filename)
-        output_writers[row_type] = rows.utils.CsvLazyDictWriter(output_filename)
+    header_definitions, output_writers, transform_functions = {}, {}, {}
+    for row_type, data in row_types.items():
+        header_definitions[row_type] = read_header(data["header_filename"])
+        output_writers[row_type] = CsvLazyDictWriter(data["output_filename"])
+        transform_functions[row_type] = data["transform_function"]
     extract_files(
-        input_filename, header_fobjs, output_writers, input_encoding=input_encoding
+        filename=input_filename,
+        header_definitions=header_definitions,
+        transform_functions=transform_functions,
+        output_writers=output_writers,
+        error_filename=error_filename,
+        input_encoding=input_encoding,
     )
 
 
