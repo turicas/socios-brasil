@@ -121,6 +121,21 @@ fazer as conversões:
 Você poderá rodar etapas separadamente também (leia o script [run.sh](run.sh)
 para mais detalhes).
 
+#### Agilizando o Download
+
+[O servidor da Receita Federal onde os dados estão hospedados é **muito
+lento**](https://twitter.com/turicas/status/1114185311372873729) e, por isso, o
+[Brasil.IO](https://brasil.io/) disponibiliza um *mirror* de onde o download
+pode ser feito mais rapidamente. Para executar o script baixando os dados do
+*mirror*, execute:
+
+```bash
+./run.sh --use-mirror
+```
+
+> Nota: os *mirrors* do Brasil.IO ainda estão em fase de testes e não é
+> garantido que estejam sempre atualizados.
+
 
 ## Importando em Bancos de Dados
 
