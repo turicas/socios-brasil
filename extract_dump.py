@@ -240,21 +240,17 @@ def parse_row(header, line):
         value = line[field["start_index"] : field["end_index"]].strip()
 
         if field_name == "filler":
-            if value.strip() not in ("", "9999999999999999"):
+            if set(value) not in (set(), {"9"}):
                 raise ParsingError(line=line, error="Wrong filler")
             continue  # Do not save `filler`
-        elif field_name in ("tipo_de_registro", "tipo_do_registro"):
+        elif field_name == "tipo_de_registro":
             row_type = value
             continue  # Do not save row type (will be saved in separate files)
-        elif field_name in ("fim", "fim_registro", "fim_de_registro"):
+        elif field_name == "fim":
             if value.strip() != "F":
                 raise ParsingError(line=line, error="Wrong end")
             continue  # Do not save row end mark
-        elif field_name in (
-            "indicador_full_diario",
-            "tipo_atualizacao",
-            "tipo_de_atualizacao",
-        ):
+        elif field_name in ("indicador_full_diario", "tipo_de_atualizacao"):
             continue  # These fields are usually useless
 
         if field_name.startswith("data_") and value:
