@@ -67,9 +67,10 @@ Como resultado temos os seguintes arquivos:
 - `empresa-socia.csv.gz`: cadastro das empresas que são sócias de outras
   empresas (é o arquivo `socio.csv.gz` filtrado por sócios do tipo PJ).
 
-Além disso, os arquivos contidos na pasta [schema](schema/) podem te ajudár a
-importar os dados para um banco de dados (veja comandos para [SQLite](#sqlite)
-e [PostgreSQL](#postgresql) abaixo).
+Além disso, os arquivos contidos nas pastas [schema](schema/) e
+[schema-full](schema-full/) podem te ajudar a importar os dados para um banco
+de dados (veja comandos para [SQLite](#sqlite) e [PostgreSQL](#postgresql)
+abaixo).
 
 > Nota 1: a extensão `.gz` quer dizer que o arquivo foi compactado usando gzip.
 > Para descompactá-lo execute o comando `gunzip arquivo.gz` (**não é necessário
@@ -144,11 +145,17 @@ importá-los em um banco de dados para facilitar consultas. Com a [interface de
 linha de comando da rows](http://turicas.info/rows/cli/) é possível importá-los
 rapidamente em bancos SQLite e PostgreSQL.
 
-> Nota: depois de importar os dados em um banco de dados é recomendável a
+> Nota 1: depois de importar os dados em um banco de dados é recomendável a
 > criação de índices para agilizar as consultas. Um índice bem comum é na
 > coluna `cnpj` (de todas as tabelas), para facilitar encontrar uma determinada
 > empresa, seus sócios e CNAEs secundários através do CNPJ. Exemplo:
-> `CREATE INDEX IF NOT EXISTS idx_empresa_cnpj ON empresa (cnpj);`.
+> `CREATE INDEX IF NOT EXISTS idx_empresa_cnpj ON empresa (cnpj);`. Veja o
+> arquivo [sql/create-indexes.sql](sql/create-indexes.sql) para uma lista de
+> índices sugeridos.
+
+> Nota 2: caso utilize a opção `--no_censorship`, utilize os arquivos da pasta
+> `schema-full` em vez da pasta `schema`, pois a versão "sem censura" possui
+> mais colunas.
 
 ### SQLite
 
