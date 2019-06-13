@@ -53,9 +53,13 @@ contendo as empresas que são sócias de outras empresas (para facilitar buscas
 de *holdings*).
 
 Caso você não queira/possa rodar o script, **[acesse diretamente os dados
-convertidos](https://drive.google.com/open?id=1tOGB1mJZcF5V1SUS-YlPJF0-zdhfN1yd)**.
-Cada pasta corresponde à data de coleta do arquivo, onde dentro você deverá
-acessar a pasta `output`, que contém os seguintes arquivos:
+convertidos no Brasil.IO](https://brasil.io/dataset/socios-brasil)**.
+
+Se esse programa e/ou os dados resultantes foram úteis a você ou à sua empresa,
+considere [fazer uma doação ao projeto Brasil.IO](https://brasil.io/doe), que é
+mantido voluntariamente.
+
+Como resultado temos os seguintes arquivos:
 
 - `empresa.csv.gz`: cadastro das empresas;
 - `socio.csv.gz`: cadastro dos sócios;
@@ -95,6 +99,8 @@ opção `--no_censorship` na linha do `extract_dump.py`.
 
 ## Rodando
 
+### Instalando as Dependências
+
 Esse script depende de Python 3.7, de algumas bibliotecas e do software
 [aria2](https://aria2.github.io/). Depois de instalar o Python 3.7 e o aria2,
 instale as bibliotecas executando:
@@ -102,6 +108,8 @@ instale as bibliotecas executando:
 ```bash
 pip install -r requirements.txt
 ```
+
+### Executando
 
 Então basta executar o script `run.sh` para baixar os arquivos necessários e
 fazer as conversões:
