@@ -23,7 +23,7 @@ ddd_telefone_1,text
 ddd_telefone_2,text
 ddd_fax,text
 qualificacao_do_responsavel,integer
-capital_social,integer
+capital_social,decimal
 porte,integer
 opcao_pelo_simples,bool
 data_opcao_pelo_simples,text

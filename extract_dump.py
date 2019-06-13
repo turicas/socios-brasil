@@ -2,28 +2,19 @@
 """
 Extrai os dados do dump do QSA da Receita Federal
 
-O arquivo de origem usado tem o nome "F.K032001K.D81106A.zip", mas pode ser
-especificado qualquer arquivo de origem que siga o mesmo padrão - esse arquivo
-não está disponível no site da Receita Federal (obtive pela Lei de Acesso à
-Informação).
-
-Dentro do arquivo zip existe apenas um arquivo do tipo fixed-width file,
+Dentro dos arquivos ZIP existe apenas um arquivo do tipo fixed-width file,
 contendo registros de diversas tabelas diferentes. O script descompacta sob
-demanda o zip e, conforme vai lendo os registros contidos, cria os arquivos de
+demanda o ZIP e, conforme vai lendo os registros contidos, cria os arquivos de
 saída, em formato CSV. Você deve especificar o arquivo de entrada e o diretório
 onde ficarão os CSVs de saída (que por padrão ficam compactados também, em
 gzip, para diminuir o tempo de escrita e economizar espaço em disco).
-
-Se você quer apenas acesso aos dados convertidos, você não precisa baixar
-o arquivo de entrada e rodar o script (que pode levar horas) - procure por esse
-dataset em https://brasil.io/ e baixe os dados:
-    https://drive.google.com/open?id=1tOGB1mJZcF5V1SUS-YlPJF0-zdhfN1yd
 """
 
-import argparse
-import io
-from zipfile import ZipFile
+from argparse import ArgumentParser
+from decimal import Decimal
+from io import TextIOWrapper
 from pathlib import Path
+from zipfile import ZipFile
 
 import rows
 from rows.fields import slug
@@ -44,17 +35,12 @@ fields_to_clear_if_mei = (
     "logradouro",
     "numero",
 )
-
-
-class ParsingError(ValueError):
-    def __init__(self, line, error):
-        super().__init__()
-        self.line = line
-        self.error = error
+ONE_CENT = Decimal("0.01")
 
 
 def clear_company_name(name):
-    """
+    """Remove CPF from company name (useful to remove sensitive data from MEI)
+
     >>> clear_company_name('FALANO DE TAL 12345678901')
     'FALANO DE TAL'
     >>> clear_company_name('FALANO DE TAL CPF 12345678901')
@@ -75,6 +61,13 @@ def clear_company_name(name):
     if words[-1] == "-":
         words.pop()
     return " ".join(words).strip()
+
+
+class ParsingError(ValueError):
+    def __init__(self, line, error):
+        super().__init__()
+        self.line = line
+        self.error = error
 
 
 def clear_email(email):
@@ -178,6 +171,9 @@ def transform_empresa(row):
         if field_name in row:
             del row[field_name]
 
+    if row["capital_social"] is not None:
+        row["capital_social"] = Decimal(row["capital_social"]) * ONE_CENT
+
     return [row]
 
 
@@ -197,6 +193,8 @@ def transform_socio(row):
 
     if row["identificador_de_socio"] == 2:  # Pessoa Física
         row["cnpj_cpf_do_socio"] = row["cnpj_cpf_do_socio"][-11:]
+
+    # TODO: convert percentual_capital_social
 
     return [row]
 
@@ -291,7 +289,7 @@ def extract_files(
 
     for filename in filenames:
         # TODO: use another strategy to open this file (like using rows'
-        # open_compressed)
+        # open_compressed when archive support is implemented)
         zf = ZipFile(filename)
         inner_filenames = zf.filelist
         assert (
@@ -302,7 +300,7 @@ def extract_files(
         # represented by 1 byte, such as latin1. If the encoding can represent one
         # character using more than 1 byte (like UTF-8), this approach will make
         # incorrect results.
-        fobj = io.TextIOWrapper(zf.open(inner_filenames[0]), encoding=input_encoding)
+        fobj = TextIOWrapper(zf.open(inner_filenames[0]), encoding=input_encoding)
         for line in tqdm(fobj, desc=f"Extracting {filename}"):
             row_type = line[0]
             try:
@@ -327,7 +325,7 @@ def main():
     output_path = base_path / "data" / "output"
     error_filename = output_path / "errors.csv"
 
-    parser = argparse.ArgumentParser()
+    parser = ArgumentParser()
     parser.add_argument("output_path", default=str(output_path))
     parser.add_argument("input_filenames", nargs="+")
     args = parser.parse_args()
