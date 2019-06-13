@@ -77,11 +77,20 @@ e [PostgreSQL](#postgresql) abaixo).
 
 ### Privacidade
 
-Para garantir a privacidade de algumas pessoas e evitar SPAM, o script
-deleta/limpa algumas colunas com informações sensíveis. Essa será a forma
-padrão de funcionamento para não facilitar a exposição desses dados (em breve
-[será adicionada uma opção para extrair completametne os
-dados](https://github.com/turicas/socios-brasil/issues/23)).
+Para garantir a privacidade, evitar SPAM e publicar apenas dados corretos, o
+script deleta/limpa algumas colunas com informações sensíveis. Essa será a
+forma padrão de funcionamento para não facilitar a exposição desses dados. Os
+dados censurados são:
+
+- `empresa.csv.gz`: deletadas as colunas "codigo_pais", "correio_eletronico" e
+  "nome_pais" (nome/código do país incorreto);
+- `socio.csv.gz`: deletadas as colunas "codigo_pais" e "nome_pais" (incorretos)
+  e, caso seja MEI, as colunas "complemento", "ddd_fax", "ddd_telefone_1",
+  "ddd_telefone_2", "descricao_tipo_logradouro", "logradouro", "numero" terão
+  seus valores em branco e na razão social não constará o CPF do dono.
+
+Caso queira rodar o script sem o modo censura, altere o `run.sh` e adicione a
+opção `--no_censorship` na linha do `extract_dump.py`.
 
 
 ## Rodando

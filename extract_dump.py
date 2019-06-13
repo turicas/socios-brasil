@@ -24,9 +24,11 @@ from tqdm import tqdm
 
 
 # Fields to delete/clean in some cases so we don't expose personal information
-# TODO: add option to not delete/clear these fields
-fields_to_delete = ("codigo_pais", "correio_eletronico", "filler", "nome_pais")
-fields_to_clear_if_mei = (
+FIELDS_TO_DELETE = {
+    "1": ("codigo_pais", "correio_eletronico", "nome_pais"),  # Company
+    "2": ("codigo_pais", "nome_pais"),  # Partner
+}
+FIELDS_TO_CLEAR_MEI = (
     "complemento",
     "ddd_fax",
     "ddd_telefone_1",
@@ -61,6 +63,26 @@ def clear_company_name(name):
     if words[-1] == "-":
         words.pop()
     return " ".join(words).strip()
+
+
+def censor(row_type, row):
+    """Remove sensitive information from row (in place)"""
+
+    # Delete some fields
+    if row_type in FIELDS_TO_DELETE:
+        for field_name in FIELDS_TO_DELETE[row_type]:
+            if field_name in row:
+                del row[field_name]
+
+    # Clear/modify some fields
+    if row_type == "1" and row["opcao_pelo_mei"] == "1":  # "eupresa"
+        for field_name in FIELDS_TO_CLEAR_MEI:
+            row[field_name] = ""
+        # Clear CPF from razao_social/nome_fantasia
+        if row["razao_social"].split()[-1].isdigit():
+            row["razao_social"] = clear_company_name(row["razao_social"])
+        if row["nome_fantasia"] and row["nome_fantasia"].split()[-1].isdigit():
+            row["nome_fantasia"] = clear_company_name(row["nome_fantasia"])
 
 
 class ParsingError(ValueError):
@@ -143,33 +165,17 @@ def transform_empresa(row):
             f"Opção pelo Simples inválida: {row['opcao_pelo_simples']} (CNPJ: {row['cnpj']})"
         )
 
-    if set(row["nome_fantasia"]) == set(["0"]):
-        row["nome_fantasia"] = ""
-
     if row["opcao_pelo_mei"] in ("N", ""):
         row["opcao_pelo_mei"] = "0"
     elif row["opcao_pelo_mei"] == "S":
         row["opcao_pelo_mei"] = "1"
-
-        # Clear CPF from razao_social/nome_fantasia
-        if row["razao_social"].split()[-1].isdigit():
-            row["razao_social"] = clear_company_name(row["razao_social"])
-        if row["nome_fantasia"] and row["nome_fantasia"].split()[-1].isdigit():
-            row["nome_fantasia"] = clear_company_name(row["nome_fantasia"])
-
-        # Clear all fields which can expose personal info
-        for field_name in fields_to_clear_if_mei:
-            row[field_name] = ""
-
     else:
         raise ValueError(
             f"Opção pelo MEI inválida: {row['opcao_pelo_mei']} (CNPJ: {row['cnpj']})"
         )
 
-    # Clear all fields which can expose sensitive info
-    for field_name in fields_to_delete:
-        if field_name in row:
-            del row[field_name]
+    if set(row["nome_fantasia"]) == set(["0"]):
+        row["nome_fantasia"] = ""
 
     if row["capital_social"] is not None:
         row["capital_social"] = Decimal(row["capital_social"]) * ONE_CENT
@@ -277,6 +283,7 @@ def extract_files(
     output_writers,
     error_filename,
     input_encoding="latin1",
+    censorship=True,
 ):
     """Extract files from a fixed-width file containing more than one row type
 
@@ -310,10 +317,12 @@ def extract_files(
                     {"error": exception.error, "line": exception.line}
                 )
                 continue
-
             data = transform_functions[row_type](row)
             for row in data:
+                if censorship:  # Clear sensitive information
+                    censor(row_type, row)
                 output_writers[row_type].writerow(row)
+
         fobj.close()
         zf.close()
 
@@ -328,6 +337,7 @@ def main():
     parser = ArgumentParser()
     parser.add_argument("output_path", default=str(output_path))
     parser.add_argument("input_filenames", nargs="+")
+    parser.add_argument("--no_censorship", action="store_true")
     args = parser.parse_args()
 
     input_encoding = "latin1"
@@ -337,6 +347,7 @@ def main():
     if not output_path.exists():
         output_path.mkdir(parents=True)
     error_filename = output_path / "error.csv.gz"
+    censorship = not args.no_censorship
 
     row_types = {
         "0": {
@@ -377,6 +388,7 @@ def main():
         output_writers=output_writers,
         error_filename=error_filename,
         input_encoding=input_encoding,
+        censorship=censorship,
     )
 
 
