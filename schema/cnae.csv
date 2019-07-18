@@ -1,0 +1,15 @@
+field_name,field_type
+id_subclasse,text
+descricao_subclasse,text
+id_classe,text
+descricao_classe,text
+id_grupo,text
+descricao_grupo,text
+id_divisao,text
+descricao_divisao,text
+id_secao,text
+descricao_secao,text
+notas_explicativas,text
+url,text
+id,integer
+versao,text

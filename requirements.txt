@@ -3,4 +3,5 @@ git+https://github.com/turicas/rows.git@develop#egg=rows
 lxml
 requests
 requests-cache
+scrapy
 tqdm==4.24.0

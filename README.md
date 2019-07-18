@@ -98,6 +98,19 @@ Caso queira rodar o script sem o modo censura, altere o `run.sh` e adicione a
 opção `--no_censorship` na linha do `extract_dump.py`.
 
 
+### Dados auxiliares
+
+Foi criado um spider que baixa os metadados das [atividades empresariais
+(CNAEs) do site do IBGE](https://cnae.ibge.gov.br). Para rodá-lo, execute:
+
+```bash
+./run-cnae.sh
+```
+
+O script baixará os dados para as versões 1.0, 1.1, 2.0, 2.1, 2.2 e 2.3 e
+salvará em `data/output`.
+
+
 ## Rodando
 
 ### Instalando as Dependências
