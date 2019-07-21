@@ -164,7 +164,10 @@ rapidamente em bancos SQLite e PostgreSQL.
 > empresa, seus sócios e CNAEs secundários através do CNPJ. Exemplo:
 > `CREATE INDEX IF NOT EXISTS idx_empresa_cnpj ON empresa (cnpj);`. Veja o
 > arquivo [sql/create-indexes.sql](sql/create-indexes.sql) para uma lista de
-> índices sugeridos.
+> índices sugeridos; veja também os outros arquivos da pasta `sql/` para
+> criação de tabelas auxiliares, chaves primárias e estrangeiras e o arquivo
+> `import-postgresql.sh` para automatizar o processo de importação e criação
+> dos índices.
 
 > Nota 2: caso utilize a opção `--no_censorship`, utilize os arquivos da pasta
 > `schema-full` em vez da pasta `schema`, pois a versão "sem censura" possui

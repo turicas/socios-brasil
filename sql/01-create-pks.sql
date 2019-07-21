@@ -1,0 +1,2 @@
+ALTER TABLE empresa ADD CONSTRAINT pk_empresa_id PRIMARY KEY (cnpj);
+ALTER TABLE cnae ADD CONSTRAINT pk_cnae_id PRIMARY KEY (id);
