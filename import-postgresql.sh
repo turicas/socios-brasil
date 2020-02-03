@@ -10,6 +10,8 @@ function import_table() {
 
 	time rows pgimport \
 		--schema="$SCHEMA_PATH/${schema}.csv" \
+		--input-encoding="utf-8" \
+		--dialect="excel" \
 		"$OUTPUT_PATH/${filename}.csv.gz" \
 		"$POSTGRESQL_URI" \
 		"$tablename"
@@ -22,13 +24,14 @@ import_table empresa-socia socio empresa_socia
 import_table cnae-secundaria cnae-secundaria cnae_secundaria
 
 # Import CNAE tables
-schema="$SCHEMA_PATH/cnae.csv"
+schema="cnae"
 for filename in $OUTPUT_PATH/cnae-1*.csv* $OUTPUT_PATH/cnae-2*.csv*; do
     versao="$(basename $filename | sed 's/.csv.*//; s/cnae-//; s/\.//')"
+    filename=$(basename $filename | sed 's/.csv.gz//')
     import_table $filename $schema "cnae_$versao"
 done
 
-# Execute SQL queries
+## Execute SQL queries
 for filename in sql/*.sql; do
     echo "Executing ${filename}..."
     time cat $filename | psql $POSTGRESQL_URI
