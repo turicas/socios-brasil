@@ -6,6 +6,7 @@ CREATE INDEX IF NOT EXISTS idx_cnae_cnpj_cnpj ON cnae_cnpj (cnpj);
 CREATE INDEX IF NOT EXISTS idx_cnae_cnpj_cnae ON cnae_cnpj (cnae, primaria);
 CREATE INDEX IF NOT EXISTS idx_cnae_id ON cnae (id);
 
+CREATE INDEX IF NOT EXISTS idx_empresa_cnae_fiscal ON empresa (cnae_fiscal);
 CREATE INDEX IF NOT EXISTS idx_empresa_location ON empresa (uf, municipio, bairro);
 CREATE INDEX IF NOT EXISTS idx_empresa_mei_simples ON empresa (opcao_pelo_mei, opcao_pelo_simples);
 CREATE INDEX IF NOT EXISTS idx_empresa_situacao_cadastral ON empresa (situacao_cadastral);
