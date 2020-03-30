@@ -8,6 +8,7 @@ function import_table() {
 	schema="$2"
 	tablename="$3"
 
+	echo "DROP TABLE IF EXISTS ${tablename};" | psql "$POSTGRESQL_URI"
 	time rows pgimport \
 		--schema="$SCHEMA_PATH/${schema}.csv" \
 		--input-encoding="utf-8" \
