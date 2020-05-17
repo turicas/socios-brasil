@@ -218,6 +218,7 @@ rows pgimport --schema=schema/empresa.csv data/output/empresa.csv.gz $POSTGRESQL
 rows pgimport --schema=schema/socio.csv data/output/empresa-socia.csv.gz $POSTGRESQL_URI empresa_socia
 rows pgimport --schema=schema/socio.csv data/output/socio.csv.gz $POSTGRESQL_URI socio
 rows pgimport --schema=schema/cnae-secundaria.csv data/output/cnae-secundaria.csv.gz $POSTGRESQL_URI cnae_secundaria
+rows pgimport --schema=schema/cnae.csv data/output/cnae-1.0.csv.gz $POSTGRESQL_URI cnae # Verificar a quantidade de arquivos cnae-*.csv.gz gerados em data/output/
 ```
 
 Pegue um café, aguarde alguns minutos e depois desfrute do banco de dados em
