@@ -1,7 +1,6 @@
 CREATE INDEX IF NOT EXISTS idx_socio_cnpj ON socio (cnpj);
 CREATE INDEX IF NOT EXISTS idx_socio_documento_socio ON socio (cnpj_cpf_do_socio, cnpj);
 CREATE INDEX IF NOT EXISTS idx_empresa_socia_cnpjs ON empresa_socia (cnpj, cnpj_cpf_do_socio);
-CREATE INDEX IF NOT EXISTS idx_cnae_secundaria_cnpj ON cnae_secundaria (cnpj);
 CREATE INDEX IF NOT EXISTS idx_cnae_cnpj_cnpj ON cnae_cnpj (cnpj);
 CREATE INDEX IF NOT EXISTS idx_cnae_cnpj_cnae ON cnae_cnpj (cnae, primaria);
 CREATE INDEX IF NOT EXISTS idx_cnae_id ON cnae (id);

@@ -20,9 +20,9 @@ function import_table() {
 
 # Import main tables
 import_table empresa empresa empresa
+import_table cnae-cnpj cnae-cnpj cnae_cnpj
 import_table socio socio socio
 import_table empresa-socia socio empresa_socia
-import_table cnae-secundaria cnae-secundaria cnae_secundaria
 
 # Import CNAE tables
 schema="cnae"

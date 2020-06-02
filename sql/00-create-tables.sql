@@ -1,9 +1,3 @@
-DROP TABLE IF EXISTS cnae_cnpj;
-CREATE TABLE cnae_cnpj AS
-    (SELECT cnpj, cnae_fiscal AS cnae, TRUE AS primaria FROM empresa)
-    UNION
-    (SELECT cnpj, cnae, FALSE AS primaria FROM cnae_secundaria);
-
 DROP TABLE IF EXISTS cnae;
 CREATE TABLE cnae AS SELECT * FROM cnae_23;
 INSERT INTO cnae SELECT c22.* FROM cnae_22 AS c22 WHERE NOT EXISTS(SELECT * FROM cnae AS c WHERE c.id = c22.id);
