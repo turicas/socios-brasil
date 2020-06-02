@@ -22,7 +22,7 @@ function import_table() {
 import_table empresa empresa empresa
 import_table cnae-cnpj cnae-cnpj cnae_cnpj
 import_table socio socio socio
-import_table empresa-socia socio empresa_socia
+import_table holding holding holding
 
 # Import CNAE tables
 schema="cnae"

@@ -33,8 +33,8 @@ function extract_data() {
 	time python extract_cnae_cnpj.py data/output/{empresa,cnae-secundaria,cnae-cnpj}.csv.gz
 }
 
-function extract_holdings() {
-	time python extract_holdings.py data/output/socio.csv.gz data/output/empresa-socia.csv.gz
+function extract_holding() {
+	time python extract_holding.py data/output-full/{socio,empresa,holding}.csv.gz
 }
 
 function extract_cnae() {
@@ -54,5 +54,5 @@ function extract_cnae() {
 
 download_data
 extract_data
-extract_holdings
+extract_holding
 extract_cnae

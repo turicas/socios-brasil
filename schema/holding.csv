@@ -1,0 +1,7 @@
+field_name,field_type
+holding_cnpj,text
+holding_razao_social,text
+cnpj,text
+razao_social,text
+codigo_qualificacao_socia,integer
+qualificacao_socia,text

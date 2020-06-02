@@ -1,41 +1,80 @@
-codigo,descricao
-5,Administrador
-8,Conselheiro de Administração
-10,Diretor
-16,Presidente
-17,Procurador
-20,Sociedade Consorciada
-21,Sociedade Filiada
-22,Sócio
-23,Sócio Capitalista
-24,Sócio Comanditado
-25,Sócio Comanditário
-26,Sócio de Indústria
-28,Sócio-Gerente
-29,Sócio Incapaz ou Relat.Incapaz (exceto menor)
-30,Sócio Menor (Assistido/Representado)
-31,Sócio Ostensivo
-37,Sócio Pessoa Jurídica Domiciliado no Exterior
-38,Sócio Pessoa Física Residente no Exterior
-47,Sócio Pessoa Física Residente no Brasil
-48,Sócio Pessoa Jurídica Domiciliado no Brasil
-49,Sócio-Administrador
-52,Sócio com Capital
-53,Sócio sem Capital
-54,Fundador
-55,Sócio Comanditado Residente no Exterior
-56,Sócio Comanditário Pessoa Física Residente no Exterior
-57,Sócio Comanditário Pessoa Jurídica Domiciliado no Exterior
-58,Sócio Comanditário Incapaz
-59,Produtor Rural
-63,Cotas em Tesouraria
-65,Titular Pessoa Física Residente ou Domiciliado no Brasil
-66,Titular Pessoa Física Residente ou Domiciliado no Exterior
-67,Titular Pessoa Física Incapaz ou Relativamente Incapaz (exceto menor)
-68,Titular Pessoa Física Menor (Assistido/Representado)
-70,Administrador Residente ou Domiciliado no Exterior
-71,Conselheiro de Administração Residente ou Domiciliado no Exterior
-72,Diretor Residente ou Domiciliado no Exterior
-73,Presidente Residente ou Domiciliado no Exterior
-74,Sócio-Administrador Residente ou Domiciliado no Exterior
-75,Fundador Residente ou Domiciliado no Exterior
+codigo,descricao,coletado_atualmente
+1,Acionista,Não
+2,Acionista Controlador,Não
+3,Acionista Diretor,Não
+4,Acionista Presidente,Não
+5,Administrador,Sim
+6,Administradora de consórcio de Empresas ou Grupo de Empresas,Não
+7,Comissário,Não
+8,Conselheiro de Administração,Sim
+9,Curador,Sim
+10,Diretor,Sim
+11,Interventor,Sim
+12,Inventariante,Sim
+13,Liquidante,Sim
+14,Mãe,Sim
+15,Pai,Sim
+16,Presidente,Sim
+17,Procurador,Sim
+18,Secretário,Sim
+19,Síndico (Condomínio),Sim
+20,Sociedade Consorciada,Sim
+21,Sociedade Filiada,Sim
+22,Sócio,Sim
+23,Sócio Capitalista,Sim
+24,Sócio Comanditado,Sim
+25,Sócio Comanditário,Sim
+26,Sócio de Indústria,Sim
+27,Sócio Residente ou Domiciliado no Exterior,Não
+28,Sócio-Gerente,Sim
+29,Sócio ou Acionista Incapaz ou Relativamente Incapaz (exceto menor),Sim
+30,Sócio ou Acionista Menor (Assistido/Representado),Sim
+31,Sócio Ostensivo,Sim
+32,Tabelião,Sim
+33,Tesoureiro,Sim
+34,Titular de Empresa Individual Imobiliária,Sim
+35,Tutor,Sim
+36,Gerente-Delegado,Não
+37,Sócio Pessoa Jurídica Domiciliado no Exterior,Sim
+38,Sócio Pessoa Física Residente ou Domiciliado no Exterior,Sim
+39,Diplomata,Sim
+40,Cônsul,Sim
+41,Representante de Organização Internacional,Sim
+42,Oficial de Registro,Sim
+43,Responsável,Sim
+44,Sócio Participante,Não
+45,Sócio Investidor,Não
+46,Ministro de Estado das Relações Exteriores,Sim
+47,Sócio Pessoa Física Residente no Brasil,Sim
+48,Sócio Pessoa Jurídica Domiciliado no Brasil,Sim
+49,Sócio-Administrador,Sim
+50,Empresário,Sim
+51,Candidato a Cargo Político Eletivo,Sim
+52,Sócio com Capital,Sim
+53,Sócio sem Capital,Sim
+54,Fundador,Sim
+55,Sócio Comanditado Residente no Exterior,Sim
+56,Sócio Comanditário Pessoa Física Residente no Exterior,Sim
+57,Sócio Comanditário Pessoa Jurídica Domiciliado no Exterior,Sim
+58,Sócio Comanditário Incapaz,Sim
+59,Produtor Rural,Sim
+60,Cônsul Honorário,Sim
+61,Responsável Indigena,Sim
+62,Representante das Instituições Extraterritoriais,Sim
+63,Cotas em Tesouraria,Sim
+64,Administrador Judicial,Sim
+65,Titular Pessoa Física Residente ou Domiciliado no Brasil,Sim
+66,Titular Pessoa Física Residente ou Domiciliado no Exterior,Sim
+67,Titular Pessoa Física Incapaz ou Relativamente Incapaz (exceto menor),Sim
+68,Titular Pessoa Física Menor (Assistido/Representado),Sim
+69,Beneficiário Final,Não
+70,Administrador Residente ou Domiciliado no Exterior,Sim
+71,Conselheiro de Administração Residente ou Domiciliado no Exterior,Sim
+72,Diretor Residente ou Domiciliado no Exterior,Sim
+73,Presidente Residente ou Domiciliado no Exterior,Sim
+74,Sócio-Administrador Residente ou Domiciliado no Exterior,Sim
+75,Fundador Residente ou Domiciliado no Exterior,Sim
+76,Protetor,Sim
+77,Vice-Presidente,Sim
+78,Titular Pessoa Jurídica Domiciliada no Brasil,Sim
+79,Titular Pessoa Jurídica Domiciliada no Exterior,Sim
