@@ -64,7 +64,7 @@ Como resultado temos os seguintes arquivos:
 - `empresa.csv.gz`: cadastro das empresas;
 - `socio.csv.gz`: cadastro dos sócios;
 - `cnae-secundaria.csv.gz`: lista de CNAEs secundárias;
-- `empresa-socia.csv.gz`: cadastro das empresas que são sócias de outras
+- `holding.csv.gz`: cadastro das empresas que são sócias de outras
   empresas (é o arquivo `socio.csv.gz` filtrado por sócios do tipo PJ).
 
 Além disso, os arquivos contidos nas pastas [schema](schema/) e
@@ -79,6 +79,10 @@ abaixo).
 
 > Nota 2: a codificação de caracteres original é ISO-8859-15, mas o script gera
 > os arquivos CSV em UTF-8.
+
+> Nota 3: se você estava usando os dados no formato anterior, veja como
+> converter os novos para o padrão antigo no arquivo
+> `sql/04-create-old-views.sql`.
 
 ### Privacidade
 
