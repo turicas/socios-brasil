@@ -4,30 +4,28 @@ SCHEMA_PATH="schema"
 OUTPUT_PATH="data/output"
 
 function import_table() {
-	filename="$1"
-	schema="$2"
-	tablename="$3"
+	tablename="$1"
 
 	echo "DROP TABLE IF EXISTS ${tablename};" | psql "$POSTGRESQL_URI"
 	time rows pgimport \
-		--schema="$SCHEMA_PATH/${schema}.csv" \
+		--schema="$SCHEMA_PATH/${tablename}.csv" \
 		--input-encoding="utf-8" \
 		--dialect="excel" \
-		"$OUTPUT_PATH/${filename}.csv.gz" \
+		"$OUTPUT_PATH/${tablename}.csv.gz" \
 		"$POSTGRESQL_URI" \
 		"$tablename"
 }
 
 # Import main tables
-import_table empresa empresa empresa
-import_table cnae-cnpj cnae-cnpj cnae_cnpj
-import_table socio socio socio
-import_table holding holding holding
+import_table empresa
+import_table cnae_cnpj
+import_table socio
+import_table holding
 
 # Import CNAE tables
 schema="cnae"
-for filename in $OUTPUT_PATH/cnae-1*.csv* $OUTPUT_PATH/cnae-2*.csv*; do
-    versao="$(basename $filename | sed 's/.csv.*//; s/cnae-//; s/\.//')"
+for filename in $OUTPUT_PATH/cnae_1*.csv* $OUTPUT_PATH/cnae_2*.csv*; do
+    versao="$(basename $filename | sed 's/.csv.*//; s/cnae_//; s/\.//')"
     filename=$(basename $filename | sed 's/.csv.gz//')
     import_table $filename $schema "cnae_$versao"
 done

@@ -362,8 +362,8 @@ def main():
             "transform_function": transform_socio,
         },
         "6": {
-            "header_filename": "headers/cnae-secundaria.csv",
-            "output_filename": output_path / "cnae-secundaria.csv.gz",
+            "header_filename": "headers/cnae_secundaria.csv",
+            "output_filename": output_path / "cnae_secundaria.csv.gz",
             "transform_function": transform_cnae_secundaria,
         },
         "9": {

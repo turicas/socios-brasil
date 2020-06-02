@@ -30,7 +30,7 @@ function download_data() {
 
 function extract_data() {
 	time python extract_dump.py data/output/ data/download/DADOS_ABERTOS_CNPJ*.zip
-	time python extract_cnae_cnpj.py data/output/{empresa,cnae-secundaria,cnae-cnpj}.csv.gz
+	time python extract_cnae_cnpj.py data/output/{empresa,cnae_secundaria,cnae_cnpj}.csv.gz
 }
 
 function extract_holding() {
@@ -39,7 +39,7 @@ function extract_holding() {
 
 function extract_cnae() {
 	for versao in "1.0" "1.1" "2.0" "2.1" "2.2" "2.3"; do
-		filename="data/output/cnae-$versao.csv"
+		filename="data/output/cnae_$versao.csv"
 		rm -rf "$filename"
 		time scrapy runspider \
 			-s RETRY_HTTP_CODES="500,503,504,400,404,408" \

@@ -4,7 +4,7 @@ from extract_dump import parse_row, read_header
 headers = {
     "1": read_header("headers/empresa.csv"),
     "2": read_header("headers/socio.csv"),
-    "6": read_header("headers/cnae-secundaria.csv"),
+    "6": read_header("headers/cnae_secundaria.csv"),
 }
 
 
