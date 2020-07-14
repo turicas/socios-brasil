@@ -93,21 +93,19 @@ CREATE VIEW view_socios AS
 			WHEN s.codigo_qualificacao_socio = 78 THEN 'Titular Pessoa Jurídica Domiciliada no Brasil'
 			WHEN s.codigo_qualificacao_socio = 79 THEN 'Titular Pessoa Jurídica Domiciliada no Exterior'
 		END AS qualificacao_socio
-	FROM data_sociosbrasil_socio AS s
-	LEFT JOIN data_sociosbrasil_empresa AS e
+	FROM socio AS s
+	LEFT JOIN empresa AS e
 	ON s.cnpj = e.cnpj;
 
 
 CREATE VIEW view_holdings AS
 	SELECT
-		s.cnpj AS cnpj,
-		s.razao_social AS razao_social,
-		s.cpf_cnpj_socio AS cnpj_socia,
-		s.nome_socio AS razao_social_socia,
-		s.qualificacao_socio AS qualificacao_socia
-	FROM view_socios AS s
-	WHERE
-		s.codigo_tipo_socio = 1;
+		h.cnpj AS cnpj,
+		h.razao_social AS razao_social,
+		h.holding_cnpj AS cnpj_socia,
+		h.qualificacao_socia AS qualificacao_socia,
+		h.holding_razao_social AS razao_social_socia
+	FROM holding AS h;
 
 
 CREATE VIEW view_empresas AS
@@ -115,4 +113,4 @@ CREATE VIEW view_empresas AS
 		e.cnpj AS cnpj,
 		e.razao_social AS razao_social,
 		e.uf AS uf
-	FROM data_sociosbrasil_empresa AS e;
+	FROM empresa AS e;
