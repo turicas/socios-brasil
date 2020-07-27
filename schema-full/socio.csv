@@ -7,7 +7,7 @@ codigo_qualificacao_socio,integer
 percentual_capital_social,integer
 data_entrada_sociedade,date
 codigo_pais,integer
-nome_pais_socio,text
+nome_pais,text
 cpf_representante_legal,text
 nome_representante_legal,text
 codigo_qualificacao_representante_legal,integer
