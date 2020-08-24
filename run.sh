@@ -34,7 +34,7 @@ function extract_data() {
 }
 
 function extract_holding() {
-	time python extract_holding.py data/output-full/{socio,empresa,holding}.csv.gz
+	time python extract_holding.py data/output/{socio,empresa,holding}.csv.gz
 }
 
 function extract_cnae() {
