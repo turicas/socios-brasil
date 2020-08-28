@@ -193,7 +193,7 @@ comandos:
 ```bash
 DB_NAME="data/output/socios-brasil.sqlite"
 rows csv2sqlite --schemas=schema/empresa.csv data/output/empresa.csv.gz "$DB_NAME"
-rows csv2sqlite --schemas=schema/socio.csv data/output/empresa-socia.csv.gz "$DB_NAME"
+rows csv2sqlite --schemas=schema/socio.csv data/output/holding.csv.gz "$DB_NAME"
 rows csv2sqlite --schemas=schema/socio.csv data/output/socio.csv.gz "$DB_NAME"
 rows csv2sqlite --schemas=schema/cnae-secundaria.csv data/output/cnae-secundaria.csv.gz "$DB_NAME"
 ```
