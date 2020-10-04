@@ -25,7 +25,7 @@ from tqdm import tqdm
 # Fields to delete/clean in some cases so we don't expose personal information
 FIELDS_TO_DELETE_COMPANY = ("codigo_pais", "correio_eletronico", "nome_pais")
 FIELDS_TO_DELETE_PARTNER = ("codigo_pais", "nome_pais")
-FIELDS_TO_CLEAR_MEI = (
+FIELDS_TO_CLEAR_INDIVIDUAL_COMPANY = (
     "complemento",
     "ddd_fax",
     "ddd_telefone_1",
@@ -35,6 +35,11 @@ FIELDS_TO_CLEAR_MEI = (
     "numero",
 )
 ONE_CENT = Decimal("0.01")
+INDIVIDUAL_COMPANIES = tuple(
+    row.codigo
+    for row in rows.import_from_csv("data/natureza-juridica.csv")
+    if "individual" in row.natureza_juridica.lower()
+)
 
 
 def clear_company_name(words):
@@ -63,33 +68,6 @@ def clear_company_name(words):
         words.pop()
 
     return " ".join(words).strip()
-
-
-def censor_partner(row):
-    """Remove sensitive information from partner row (in place)"""
-
-    # Delete some fields
-    for field_name in FIELDS_TO_DELETE_PARTNER:
-        del row[field_name]
-
-
-def censor_company(row):
-    """Remove sensitive information from company row (in place)"""
-
-    # Delete some fields
-    for field_name in FIELDS_TO_DELETE_COMPANY:
-        del row[field_name]
-
-    # Clear/modify some fields
-    if row["opcao_pelo_mei"] == "1":  # "eupresa"
-        # TODO: clear info also if it's any other type of individual company
-        for field_name in FIELDS_TO_CLEAR_MEI:
-            row[field_name] = ""
-        # Clear CPF from razao_social/nome_fantasia
-        for field_name in ("razao_social", "nome_fantasia"):
-            words = row[field_name].split()
-            if words and words[-1].isdigit():
-                row[field_name] = clear_company_name(words)
 
 
 class ParsingError(ValueError):
@@ -158,10 +136,23 @@ def read_header(filename):
     return header
 
 
-def transform_empresa(row):
+def transform_empresa(row, censor):
     """Transform row of type company"""
 
-    row["correio_eletronico"] = clear_email(row["correio_eletronico"])
+    if censor:
+        for field_name in FIELDS_TO_DELETE_COMPANY:
+            del row[field_name]
+
+        if row["codigo_natureza_juridica"] in INDIVIDUAL_COMPANIES:  # "eupresa"
+            for field_name in FIELDS_TO_CLEAR_INDIVIDUAL_COMPANY:
+                row[field_name] = ""
+            for field_name in ("razao_social", "nome_fantasia"):
+                words = row[field_name].split()
+                if words and words[-1].isdigit():
+                    row[field_name] = clear_company_name(words)
+
+    if "correio_eletronico" in row:  # Could be deleted by censorship
+        row["correio_eletronico"] = clear_email(row["correio_eletronico"])
 
     if row["opcao_pelo_simples"] in ("", "0", "6", "8"):
         row["opcao_pelo_simples"] = "0"
@@ -186,10 +177,11 @@ def transform_empresa(row):
     return [row]
 
 
-def transform_socio(row):
+def transform_socio(row, censor):
     """Transform row of type partner"""
 
-    assert row["campo_desconhecido"] == ""  # Always empty
+    if row["campo_desconhecido"] != "":
+        raise ValueError(f"Campo desconhecido preenchido - checar: {row}")
     del row["campo_desconhecido"]
 
     if row["nome_representante_legal"] == "CPF INVALIDO":
@@ -205,10 +197,15 @@ def transform_socio(row):
 
     # TODO: convert percentual_capital_social
 
+    # Delete some fields if needed
+    if censor:
+        for field_name in FIELDS_TO_DELETE_PARTNER:
+            del row[field_name]
+
     return [row]
 
 
-def transform_cnae_secundaria(row):
+def transform_cnae_secundaria(row, censor):
     """Transform row of type CNAE"""
 
     cnaes = ["".join(digits) for digits in ipartition(row.pop("cnae"), 7) if set(digits) != set(["0"])]
@@ -298,33 +295,16 @@ def extract_files(
         # character using more than 1 byte (like UTF-8), this approach will make
         # incorrect results.
         fobj = TextIOWrapper(zf.open(inner_filenames[0]), encoding=input_encoding)
-        if not censorship:
-            for line in tqdm(fobj, desc=f"Extracting {filename}"):
-                row_type = line[0]
-                try:
-                    row = parse_row(header_definitions[row_type], line)
-                except ParsingError as exception:
-                    error_writer.writerow({"error": exception.error, "line": exception.line})
-                    continue
-                data = transform_functions[row_type](row)
-                for row in data:
-                    output_writers[row_type].writerow(row)
-
-        else:
-            for line in tqdm(fobj, desc=f"Extracting {filename}"):
-                row_type = line[0]
-                try:
-                    row = parse_row(header_definitions[row_type], line)
-                except ParsingError as exception:
-                    error_writer.writerow({"error": exception.error, "line": exception.line})
-                    continue
-                data = transform_functions[row_type](row)
-                for row in data:
-                    if row_type == "1":
-                        censor_company(row)
-                    elif row_type == "2":
-                        censor_partner(row)
-                    output_writers[row_type].writerow(row)
+        for line in tqdm(fobj, desc=f"Extracting {filename}"):
+            row_type = line[0]
+            try:
+                row = parse_row(header_definitions[row_type], line)
+            except ParsingError as exception:
+                error_writer.writerow({"error": exception.error, "line": exception.line})
+                continue
+            data = transform_functions[row_type](row, censorship)
+            for row in data:
+                output_writers[row_type].writerow(row)
 
         fobj.close()
         zf.close()
@@ -355,7 +335,7 @@ def main():
         "0": {
             "header_filename": "headers/header.csv",
             "output_filename": output_path / "header.csv.gz",
-            "transform_function": lambda row: [row],
+            "transform_function": lambda row, censor: [row],
         },
         "1": {
             "header_filename": "headers/empresa.csv",
@@ -375,7 +355,7 @@ def main():
         "9": {
             "header_filename": "headers/trailler.csv",
             "output_filename": output_path / "trailler.csv.gz",
-            "transform_function": lambda row: [row],
+            "transform_function": lambda row, censor: [row],
         },
     }
     header_definitions, output_writers, transform_functions = {}, {}, {}

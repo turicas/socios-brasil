@@ -2,7 +2,9 @@
 
 set -e
 
-mkdir -p data/download data/output
+DOWNLOAD_PATH=data/download
+OUTPUT_PATH=data/output
+mkdir -p $DOWNLOAD_PATH $OUTPUT_PATH
 
 if [ "$1" = "--use-mirror" ]; then
 	USE_MIRROR=true
@@ -24,22 +26,28 @@ function download_data() {
 		if $USE_MIRROR; then
 			url="$MIRROR_URL/$(basename $url)"
 		fi
-		time aria2c --auto-file-renaming=false --continue=true -s $CONNECTIONS -x $CONNECTIONS --dir=data/download "$url"
+		time aria2c \
+			--auto-file-renaming=false \
+			--continue=true \
+			-s $CONNECTIONS \
+			-x $CONNECTIONS \
+			--dir="$DOWNLOAD_PATH" \
+			"$url"
 	done
 }
 
 function extract_data() {
-	time python extract_dump.py data/output/ data/download/DADOS_ABERTOS_CNPJ*.zip
-	time python extract_cnae_cnpj.py data/output/{empresa,cnae_secundaria,cnae_cnpj}.csv.gz
+	time python extract_dump.py $OUTPUT_PATH $DOWNLOAD_PATH/DADOS_ABERTOS_CNPJ*.zip
+	time python extract_cnae_cnpj.py $OUTPUT_PATH/{empresa,cnae_secundaria,cnae_cnpj}.csv.gz
 }
 
 function extract_holding() {
-	time python extract_holding.py data/output/{socio,empresa,holding}.csv.gz
+	time python extract_holding.py $OUTPUT_PATH/{socio,empresa,holding}.csv.gz
 }
 
 function extract_cnae() {
 	for versao in "1.0" "1.1" "2.0" "2.1" "2.2" "2.3"; do
-		filename="data/output/cnae_$versao.csv"
+		filename="$OUTPUT_PATH/cnae_$versao.csv"
 		rm -rf "$filename"
 		time scrapy runspider \
 			-s RETRY_HTTP_CODES="500,503,504,400,404,408" \
