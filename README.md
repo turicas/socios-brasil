@@ -88,19 +88,27 @@ abaixo).
 ### Privacidade
 
 Para garantir a privacidade, evitar SPAM e publicar apenas dados corretos, o
-script deleta/limpa algumas colunas com informações sensíveis. Essa será a
-forma padrão de funcionamento para não facilitar a exposição desses dados. Os
-dados censurados são:
+script deleta/limpa algumas colunas com informações sensíveis ou incorretas.
+Essa é a forma padrão de funcionamento para não facilitar a exposição desses
+dados. Os dados censurados são:
 
-- `empresa.csv.gz`: deletadas as colunas "codigo_pais", "correio_eletronico" e
-  "nome_pais" (nome/código do país incorreto);
-- `socio.csv.gz`: deletadas as colunas "codigo_pais" e "nome_pais" (incorretos)
-  e, caso seja MEI, as colunas "complemento", "ddd_fax", "ddd_telefone_1",
-  "ddd_telefone_2", "descricao_tipo_logradouro", "logradouro", "numero" terão
-  seus valores em branco e na razão social não constará o CPF do dono.
+- Na tabela `empresa`:
+  - Deletadas as colunas `codigo_pais` e `nome_pais`, pois os dados contidos
+    nelas estão incorretos;
+  - Deletada a coluna `correio_eletronico`, para evitar SPAM;
+- Na tabela `socio`:
+  - Deletadas as colunas `codigo_pais` e `nome_pais`, pois os dados contidos
+    nelas estão incorretos;
+  - As colunas `complemento`, `ddd_fax`, `ddd_telefone_1`, `ddd_telefone_2`,
+    `descricao_tipo_logradouro`, `logradouro`, `numero` terão seus dados
+    deletados (ficarão em branco) para empresas que são empreendedores
+    individuais (MEI, EI, EIRELI etc.) e, provavelmente, correspondem aos dados
+    do sócio (endereço residencial, por exemplo);
+  - Para os casos de empresas individuais que constarem o CPF na razão social
+    (como é comum no caso de MEIs), o CPF será deletado.
 
-Caso queira rodar o script sem o modo censura, altere o `run.sh` e adicione a
-opção `--no_censorship` na linha do `extract_dump.py`.
+Caso queira rodar o script sem o modo censura, altere o script `run.sh` e
+adicione a opção `--no_censorship` para o script `extract_dump.py`.
 
 
 ### Dados auxiliares
