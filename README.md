@@ -84,14 +84,6 @@ abaixo).
 > converter os novos para o padrão antigo no arquivo
 > `sql/04-create-old-views.sql`.
 
-### Dados complementares
-
-- `data/natureza-juridica.csv`: lista das possíveis naturezas jurídicas que
-  empresas podem ter (coluna `codigo_natureza_juridica` da tabela `empresa`).
-  Esse arquivo é gerado pelo script `natureza_juridica.py`, que baixa os [dados
-  do site da Receita
-  Federal](https://www.receita.fazenda.gov.br/pessoajuridica/cnpj/tabelas/natjurqualificaresponsavel.htm).
-
 
 ### Privacidade
 
@@ -113,15 +105,17 @@ opção `--no_censorship` na linha do `extract_dump.py`.
 
 ### Dados auxiliares
 
-Foi criado um spider que baixa os metadados das [atividades empresariais
-(CNAEs) do site do IBGE](https://cnae.ibge.gov.br). Para rodá-lo, execute:
-
-```bash
-./run-cnae.sh
-```
-
-O script baixará os dados para as versões 1.0, 1.1, 2.0, 2.1, 2.2 e 2.3 e
-salvará em `data/output`.
+- Cadastro Nacional de Atividades Empresariais (CNAE): existe um spider que
+  baixa os metadados das [atividades empresariais (CNAEs) do site do
+  IBGE](https://cnae.ibge.gov.br). Veja a função `extract_cnae` no arquivo
+  `run.sh`, ela baixará os dados para as versões 1.0, 1.1, 2.0, 2.1, 2.2 e 2.3
+  e salvará em `data/output`. **Nota**: esse script será melhorado/alterado,
+  veja a [issue #36](https://github.com/turicas/socios-brasil/issues/36).
+- Natureza jurídica: o arquivo `data/natureza-juridica.csv` contém o cadsatro
+  de naturezas jurídicas das empresas (coluna `codigo_natureza_juridica` da
+  tabela `empresa`).  Esse arquivo é gerado pelo script `natureza_juridica.py`,
+  que baixa os [dados do site da Receita
+  Federal](https://www.receita.fazenda.gov.br/pessoajuridica/cnpj/tabelas/natjurqualificaresponsavel.htm).
 
 
 ## Rodando
