@@ -84,6 +84,15 @@ abaixo).
 > converter os novos para o padrão antigo no arquivo
 > `sql/04-create-old-views.sql`.
 
+### Dados complementares
+
+- `data/natureza-juridica.csv`: lista das possíveis naturezas jurídicas que
+  empresas podem ter (coluna `codigo_natureza_juridica` da tabela `empresa`).
+  Esse arquivo é gerado pelo script `natureza_juridica.py`, que baixa os [dados
+  do site da Receita
+  Federal](https://www.receita.fazenda.gov.br/pessoajuridica/cnpj/tabelas/natjurqualificaresponsavel.htm).
+
+
 ### Privacidade
 
 Para garantir a privacidade, evitar SPAM e publicar apenas dados corretos, o
