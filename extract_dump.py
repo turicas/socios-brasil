@@ -23,10 +23,8 @@ from rows.utils import CsvLazyDictWriter, open_compressed
 from tqdm import tqdm
 
 # Fields to delete/clean in some cases so we don't expose personal information
-FIELDS_TO_DELETE = {
-    "1": ("codigo_pais", "correio_eletronico", "nome_pais"),  # Company
-    "2": ("codigo_pais", "nome_pais"),  # Partner
-}
+FIELDS_TO_DELETE_COMPANY = ("codigo_pais", "correio_eletronico", "nome_pais")
+FIELDS_TO_DELETE_PARTNER = ("codigo_pais", "nome_pais")
 FIELDS_TO_CLEAR_MEI = (
     "complemento",
     "ddd_fax",
@@ -39,49 +37,59 @@ FIELDS_TO_CLEAR_MEI = (
 ONE_CENT = Decimal("0.01")
 
 
-def clear_company_name(name):
+def clear_company_name(words):
     """Remove CPF from company name (useful to remove sensitive data from MEI)
 
-    >>> clear_company_name('FALANO DE TAL 12345678901')
-    'FALANO DE TAL'
-    >>> clear_company_name('FALANO DE TAL CPF 12345678901')
-    'FALANO DE TAL'
-    >>> clear_company_name('FALANO DE TAL - CPF 12345678901')
-    'FALANO DE TAL'
-    >>> clear_company_name('123456')
+    >>> clear_company_name(['FULANO', 'DE', 'TAL', '12345678901'])
+    'FULANO DE TAL'
+    >>> clear_company_name(['FULANO', 'DE', 'TAL', 'CPF', '12345678901'])
+    'FULANO DE TAL'
+    >>> clear_company_name(['FULANO', 'DE', 'TAL', '-', 'CPF', '12345678901'])
+    'FULANO DE TAL'
+    >>> clear_company_name(['123456'])
     '123456'
     """
-    if name.isdigit():  # Weird name, but not an "eupresa"
-        return name
+    if len(words) == 1 and words[0].isdigit():  # Weird name, but doesn't have a CPF
+        return words[0]
 
-    words = name.split()
-    if words[-1].isdigit() and len(words[-1]) == 11:  # Remove CPF (numbers)
+    last_word = words[-1]
+    if last_word.isdigit() and len(last_word) == 11:  # Remove CPF (numbers)
         words.pop()
+
     if words[-1].upper() == "CPF":  # Remove CPF (word)
         words.pop()
+
     if words[-1] == "-":
         words.pop()
+
     return " ".join(words).strip()
 
 
-def censor(row_type, row):
-    """Remove sensitive information from row (in place)"""
+def censor_partner(row):
+    """Remove sensitive information from partner row (in place)"""
 
     # Delete some fields
-    if row_type in FIELDS_TO_DELETE:
-        for field_name in FIELDS_TO_DELETE[row_type]:
-            if field_name in row:
-                del row[field_name]
+    for field_name in FIELDS_TO_DELETE_PARTNER:
+        del row[field_name]
+
+
+def censor_company(row):
+    """Remove sensitive information from company row (in place)"""
+
+    # Delete some fields
+    for field_name in FIELDS_TO_DELETE_COMPANY:
+        del row[field_name]
 
     # Clear/modify some fields
-    if row_type == "1" and row["opcao_pelo_mei"] == "1":  # "eupresa"
+    if row["opcao_pelo_mei"] == "1":  # "eupresa"
+        # TODO: clear info also if it's any other type of individual company
         for field_name in FIELDS_TO_CLEAR_MEI:
             row[field_name] = ""
         # Clear CPF from razao_social/nome_fantasia
-        if row["razao_social"].split()[-1].isdigit():
-            row["razao_social"] = clear_company_name(row["razao_social"])
-        if row["nome_fantasia"] and row["nome_fantasia"].split()[-1].isdigit():
-            row["nome_fantasia"] = clear_company_name(row["nome_fantasia"])
+        for field_name in ("razao_social", "nome_fantasia"):
+            words = row[field_name].split()
+            if words and words[-1].isdigit():
+                row[field_name] = clear_company_name(words)
 
 
 class ParsingError(ValueError):
@@ -290,18 +298,33 @@ def extract_files(
         # character using more than 1 byte (like UTF-8), this approach will make
         # incorrect results.
         fobj = TextIOWrapper(zf.open(inner_filenames[0]), encoding=input_encoding)
-        for line in tqdm(fobj, desc=f"Extracting {filename}"):
-            row_type = line[0]
-            try:
-                row = parse_row(header_definitions[row_type], line)
-            except ParsingError as exception:
-                error_writer.writerow({"error": exception.error, "line": exception.line})
-                continue
-            data = transform_functions[row_type](row)
-            for row in data:
-                if censorship:  # Clear sensitive information
-                    censor(row_type, row)
-                output_writers[row_type].writerow(row)
+        if not censorship:
+            for line in tqdm(fobj, desc=f"Extracting {filename}"):
+                row_type = line[0]
+                try:
+                    row = parse_row(header_definitions[row_type], line)
+                except ParsingError as exception:
+                    error_writer.writerow({"error": exception.error, "line": exception.line})
+                    continue
+                data = transform_functions[row_type](row)
+                for row in data:
+                    output_writers[row_type].writerow(row)
+
+        else:
+            for line in tqdm(fobj, desc=f"Extracting {filename}"):
+                row_type = line[0]
+                try:
+                    row = parse_row(header_definitions[row_type], line)
+                except ParsingError as exception:
+                    error_writer.writerow({"error": exception.error, "line": exception.line})
+                    continue
+                data = transform_functions[row_type](row)
+                for row in data:
+                    if row_type == "1":
+                        censor_company(row)
+                    elif row_type == "2":
+                        censor_partner(row)
+                    output_writers[row_type].writerow(row)
 
         fobj.close()
         zf.close()
