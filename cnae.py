@@ -117,17 +117,14 @@ class CNAESpider(scrapy.Spider):
                 item_data[f"id_{item_name}"] = descricao.split()[0]
                 item_data[f"descricao_{item_name}"] = descricao
                 next_root_name = self.parsers[item_name]["next"]
-            item_data.update({
-                f"id_{next_root_name}": item_id.strip(),
-                f"descricao_{next_root_name}": item_description.strip(),
-            })
+            item_data.update(
+                {f"id_{next_root_name}": item_id.strip(), f"descricao_{next_root_name}": item_description.strip(),}
+            )
             item_data.update(data)
 
             callback = self.parse_items if next_root_name != "subclasse" else self.parse_subclasse
             yield scrapy.Request(
-                url=url,
-                meta={"data": item_data, "root_name": next_root_name},
-                callback=callback,
+                url=url, meta={"data": item_data, "root_name": next_root_name}, callback=callback,
             )
 
     def parse_subclasse(self, response):
@@ -135,11 +132,7 @@ class CNAESpider(scrapy.Spider):
         data = response.request.meta["data"]
         tree = document_fromstring(response.body)
         data["notas_explicativas"] = "\n".join(
-            [
-                line.strip()
-                for line in tree.xpath('//div[@id = "notas-explicativas"]//text()')
-                if line.strip()
-            ]
+            [line.strip() for line in tree.xpath('//div[@id = "notas-explicativas"]//text()') if line.strip()]
         )
         data["url"] = response.request.url
         data["id"] = int(data["id_subclasse"].replace("/", "").replace("-", ""))

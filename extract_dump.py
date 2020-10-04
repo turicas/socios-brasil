@@ -22,7 +22,6 @@ from rows.plugins.utils import ipartition
 from rows.utils import CsvLazyDictWriter, open_compressed
 from tqdm import tqdm
 
-
 # Fields to delete/clean in some cases so we don't expose personal information
 FIELDS_TO_DELETE = {
     "1": ("codigo_pais", "correio_eletronico", "nome_pais"),  # Company
@@ -161,18 +160,14 @@ def transform_empresa(row):
     elif row["opcao_pelo_simples"] in ("5", "7"):
         row["opcao_pelo_simples"] = "1"
     else:
-        raise ValueError(
-            f"Opção pelo Simples inválida: {row['opcao_pelo_simples']} (CNPJ: {row['cnpj']})"
-        )
+        raise ValueError(f"Opção pelo Simples inválida: {row['opcao_pelo_simples']} (CNPJ: {row['cnpj']})")
 
     if row["opcao_pelo_mei"] in ("N", ""):
         row["opcao_pelo_mei"] = "0"
     elif row["opcao_pelo_mei"] == "S":
         row["opcao_pelo_mei"] = "1"
     else:
-        raise ValueError(
-            f"Opção pelo MEI inválida: {row['opcao_pelo_mei']} (CNPJ: {row['cnpj']})"
-        )
+        raise ValueError(f"Opção pelo MEI inválida: {row['opcao_pelo_mei']} (CNPJ: {row['cnpj']})")
 
     if set(row["nome_fantasia"]) == set(["0"]):
         row["nome_fantasia"] = ""
@@ -208,11 +203,7 @@ def transform_socio(row):
 def transform_cnae_secundaria(row):
     """Transform row of type CNAE"""
 
-    cnaes = [
-        "".join(digits)
-        for digits in ipartition(row.pop("cnae"), 7)
-        if set(digits) != set(["0"])
-    ]
+    cnaes = ["".join(digits) for digits in ipartition(row.pop("cnae"), 7) if set(digits) != set(["0"])]
     data = []
     for cnae in cnaes:
         new_row = row.copy()
@@ -244,7 +235,6 @@ def parse_row(header, line):
                 raise ParsingError(line=line, error="Wrong filler")
             continue  # Do not save `filler`
         elif field_name == "tipo_de_registro":
-            row_type = value
             continue  # Do not save row type (will be saved in separate files)
         elif field_name == "fim":
             if value.strip() != "F":
@@ -263,9 +253,7 @@ def parse_row(header, line):
             try:
                 value = int(value) if value else None
             except ValueError:
-                raise ParsingError(
-                    line=line, error=f"Cannot convert {repr(value)} to int"
-                )
+                raise ParsingError(line=line, error=f"Cannot convert {repr(value)} to int")
 
         row[field_name] = value
 
@@ -295,9 +283,7 @@ def extract_files(
         # open_compressed when archive support is implemented)
         zf = ZipFile(filename)
         inner_filenames = zf.filelist
-        assert (
-            len(inner_filenames) == 1
-        ), f"Only one file inside the zip is expected (got {len(inner_filenames)})"
+        assert len(inner_filenames) == 1, f"Only one file inside the zip is expected (got {len(inner_filenames)})"
         # XXX: The current approach of decoding here and then extracting
         # fixed-width-file data will work only for encodings where 1 character is
         # represented by 1 byte, such as latin1. If the encoding can represent one
@@ -309,9 +295,7 @@ def extract_files(
             try:
                 row = parse_row(header_definitions[row_type], line)
             except ParsingError as exception:
-                error_writer.writerow(
-                    {"error": exception.error, "line": exception.line}
-                )
+                error_writer.writerow({"error": exception.error, "line": exception.line})
                 continue
             data = transform_functions[row_type](row)
             for row in data:
@@ -337,7 +321,6 @@ def main():
     args = parser.parse_args()
 
     input_encoding = "latin1"
-    output_encoding = "utf-8"
     input_filenames = args.input_filenames
     output_path = Path(args.output_path)
     if not output_path.exists():

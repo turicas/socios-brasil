@@ -1,6 +1,5 @@
 from extract_dump import parse_row, read_header
 
-
 headers = {
     "1": read_header("headers/empresa.csv"),
     "2": read_header("headers/socio.csv"),

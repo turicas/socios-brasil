@@ -6,11 +6,8 @@ import rows
 from rows.utils import CsvLazyDictWriter, open_compressed
 from tqdm import tqdm
 
+QUALIFICACAO_SOCIO = {row.codigo: row.descricao for row in rows.import_from_csv("qualificacao-socio.csv")}
 
-QUALIFICACAO_SOCIO = {
-    row.codigo: row.descricao
-    for row in rows.import_from_csv("qualificacao-socio.csv")
-}
 
 def convert_socio(row):
     codigo_qualificacao = int(row["codigo_qualificacao_socio"])
@@ -55,22 +52,13 @@ def main():
         convert_function=convert_socio,
         progress=True,
     )
-    holdings = {
-        row["cnpj"]: row
-        for row in holdings_it
-        }
+    holdings = {row["cnpj"]: row for row in holdings_it}
 
     cnpjs = set(holdings.keys())
     company_names_it = filter_csv(
-        args.empresa_filename,
-        lambda row: row["cnpj"] in cnpjs,
-        convert_function=convert_empresa,
-        progress=True,
+        args.empresa_filename, lambda row: row["cnpj"] in cnpjs, convert_function=convert_empresa, progress=True,
     )
-    company_names = {
-        row["cnpj"]: row["razao_social"]
-        for row in company_names_it
-    }
+    company_names = {row["cnpj"]: row["razao_social"] for row in company_names_it}
 
     fobj_writer = open_compressed(args.output_filename, mode="w")
     csv_writer = CsvLazyDictWriter(fobj_writer)
