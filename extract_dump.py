@@ -22,13 +22,10 @@ from rows.plugins.utils import ipartition
 from rows.utils import CsvLazyDictWriter, open_compressed
 from tqdm import tqdm
 
-
 # Fields to delete/clean in some cases so we don't expose personal information
-FIELDS_TO_DELETE = {
-    "1": ("codigo_pais", "correio_eletronico", "nome_pais"),  # Company
-    "2": ("codigo_pais", "nome_pais"),  # Partner
-}
-FIELDS_TO_CLEAR_MEI = (
+FIELDS_TO_DELETE_COMPANY = ("codigo_pais", "correio_eletronico", "nome_pais")
+FIELDS_TO_DELETE_PARTNER = ("codigo_pais", "nome_pais")
+FIELDS_TO_CLEAR_INDIVIDUAL_COMPANY = (
     "complemento",
     "ddd_fax",
     "ddd_telefone_1",
@@ -38,51 +35,39 @@ FIELDS_TO_CLEAR_MEI = (
     "numero",
 )
 ONE_CENT = Decimal("0.01")
+INDIVIDUAL_COMPANIES = tuple(
+    row.codigo
+    for row in rows.import_from_csv("data/natureza-juridica.csv")
+    if "individual" in row.natureza_juridica.lower()
+)
 
 
-def clear_company_name(name):
+def clear_company_name(words):
     """Remove CPF from company name (useful to remove sensitive data from MEI)
 
-    >>> clear_company_name('FALANO DE TAL 12345678901')
-    'FALANO DE TAL'
-    >>> clear_company_name('FALANO DE TAL CPF 12345678901')
-    'FALANO DE TAL'
-    >>> clear_company_name('FALANO DE TAL - CPF 12345678901')
-    'FALANO DE TAL'
-    >>> clear_company_name('123456')
+    >>> clear_company_name(['FULANO', 'DE', 'TAL', '12345678901'])
+    'FULANO DE TAL'
+    >>> clear_company_name(['FULANO', 'DE', 'TAL', 'CPF', '12345678901'])
+    'FULANO DE TAL'
+    >>> clear_company_name(['FULANO', 'DE', 'TAL', '-', 'CPF', '12345678901'])
+    'FULANO DE TAL'
+    >>> clear_company_name(['123456'])
     '123456'
     """
-    if name.isdigit():  # Weird name, but not an "eupresa"
-        return name
+    if len(words) == 1 and words[0].isdigit():  # Weird name, but doesn't have a CPF
+        return words[0]
 
-    words = name.split()
-    if words[-1].isdigit() and len(words[-1]) == 11:  # Remove CPF (numbers)
+    last_word = words[-1]
+    if last_word.isdigit() and len(last_word) == 11:  # Remove CPF (numbers)
         words.pop()
+
     if words[-1].upper() == "CPF":  # Remove CPF (word)
         words.pop()
+
     if words[-1] == "-":
         words.pop()
+
     return " ".join(words).strip()
-
-
-def censor(row_type, row):
-    """Remove sensitive information from row (in place)"""
-
-    # Delete some fields
-    if row_type in FIELDS_TO_DELETE:
-        for field_name in FIELDS_TO_DELETE[row_type]:
-            if field_name in row:
-                del row[field_name]
-
-    # Clear/modify some fields
-    if row_type == "1" and row["opcao_pelo_mei"] == "1":  # "eupresa"
-        for field_name in FIELDS_TO_CLEAR_MEI:
-            row[field_name] = ""
-        # Clear CPF from razao_social/nome_fantasia
-        if row["razao_social"].split()[-1].isdigit():
-            row["razao_social"] = clear_company_name(row["razao_social"])
-        if row["nome_fantasia"] and row["nome_fantasia"].split()[-1].isdigit():
-            row["nome_fantasia"] = clear_company_name(row["nome_fantasia"])
 
 
 class ParsingError(ValueError):
@@ -151,28 +136,37 @@ def read_header(filename):
     return header
 
 
-def transform_empresa(row):
+def transform_empresa(row, censor):
     """Transform row of type company"""
 
-    row["correio_eletronico"] = clear_email(row["correio_eletronico"])
+    if censor:
+        for field_name in FIELDS_TO_DELETE_COMPANY:
+            del row[field_name]
+
+        if row["codigo_natureza_juridica"] in INDIVIDUAL_COMPANIES:  # "eupresa"
+            for field_name in FIELDS_TO_CLEAR_INDIVIDUAL_COMPANY:
+                row[field_name] = ""
+            for field_name in ("razao_social", "nome_fantasia"):
+                words = row[field_name].split()
+                if words and words[-1].isdigit():
+                    row[field_name] = clear_company_name(words)
+
+    if "correio_eletronico" in row:  # Could be deleted by censorship
+        row["correio_eletronico"] = clear_email(row["correio_eletronico"])
 
     if row["opcao_pelo_simples"] in ("", "0", "6", "8"):
         row["opcao_pelo_simples"] = "0"
     elif row["opcao_pelo_simples"] in ("5", "7"):
         row["opcao_pelo_simples"] = "1"
     else:
-        raise ValueError(
-            f"Opção pelo Simples inválida: {row['opcao_pelo_simples']} (CNPJ: {row['cnpj']})"
-        )
+        raise ValueError(f"Opção pelo Simples inválida: {row['opcao_pelo_simples']} (CNPJ: {row['cnpj']})")
 
     if row["opcao_pelo_mei"] in ("N", ""):
         row["opcao_pelo_mei"] = "0"
     elif row["opcao_pelo_mei"] == "S":
         row["opcao_pelo_mei"] = "1"
     else:
-        raise ValueError(
-            f"Opção pelo MEI inválida: {row['opcao_pelo_mei']} (CNPJ: {row['cnpj']})"
-        )
+        raise ValueError(f"Opção pelo MEI inválida: {row['opcao_pelo_mei']} (CNPJ: {row['cnpj']})")
 
     if set(row["nome_fantasia"]) == set(["0"]):
         row["nome_fantasia"] = ""
@@ -183,10 +177,11 @@ def transform_empresa(row):
     return [row]
 
 
-def transform_socio(row):
+def transform_socio(row, censor):
     """Transform row of type partner"""
 
-    assert row["campo_desconhecido"] == ""  # Always empty
+    if row["campo_desconhecido"] != "":
+        raise ValueError(f"Campo desconhecido preenchido - checar: {row}")
     del row["campo_desconhecido"]
 
     if row["nome_representante_legal"] == "CPF INVALIDO":
@@ -202,17 +197,18 @@ def transform_socio(row):
 
     # TODO: convert percentual_capital_social
 
+    # Delete some fields if needed
+    if censor:
+        for field_name in FIELDS_TO_DELETE_PARTNER:
+            del row[field_name]
+
     return [row]
 
 
-def transform_cnae_secundaria(row):
+def transform_cnae_secundaria(row, censor):
     """Transform row of type CNAE"""
 
-    cnaes = [
-        "".join(digits)
-        for digits in ipartition(row.pop("cnae"), 7)
-        if set(digits) != set(["0"])
-    ]
+    cnaes = ["".join(digits) for digits in ipartition(row.pop("cnae"), 7) if set(digits) != set(["0"])]
     data = []
     for cnae in cnaes:
         new_row = row.copy()
@@ -244,7 +240,6 @@ def parse_row(header, line):
                 raise ParsingError(line=line, error="Wrong filler")
             continue  # Do not save `filler`
         elif field_name == "tipo_de_registro":
-            row_type = value
             continue  # Do not save row type (will be saved in separate files)
         elif field_name == "fim":
             if value.strip() != "F":
@@ -263,9 +258,7 @@ def parse_row(header, line):
             try:
                 value = int(value) if value else None
             except ValueError:
-                raise ParsingError(
-                    line=line, error=f"Cannot convert {repr(value)} to int"
-                )
+                raise ParsingError(line=line, error=f"Cannot convert {repr(value)} to int")
 
         row[field_name] = value
 
@@ -295,9 +288,7 @@ def extract_files(
         # open_compressed when archive support is implemented)
         zf = ZipFile(filename)
         inner_filenames = zf.filelist
-        assert (
-            len(inner_filenames) == 1
-        ), f"Only one file inside the zip is expected (got {len(inner_filenames)})"
+        assert len(inner_filenames) == 1, f"Only one file inside the zip is expected (got {len(inner_filenames)})"
         # XXX: The current approach of decoding here and then extracting
         # fixed-width-file data will work only for encodings where 1 character is
         # represented by 1 byte, such as latin1. If the encoding can represent one
@@ -309,14 +300,10 @@ def extract_files(
             try:
                 row = parse_row(header_definitions[row_type], line)
             except ParsingError as exception:
-                error_writer.writerow(
-                    {"error": exception.error, "line": exception.line}
-                )
+                error_writer.writerow({"error": exception.error, "line": exception.line})
                 continue
-            data = transform_functions[row_type](row)
+            data = transform_functions[row_type](row, censorship)
             for row in data:
-                if censorship:  # Clear sensitive information
-                    censor(row_type, row)
                 output_writers[row_type].writerow(row)
 
         fobj.close()
@@ -337,7 +324,6 @@ def main():
     args = parser.parse_args()
 
     input_encoding = "latin1"
-    output_encoding = "utf-8"
     input_filenames = args.input_filenames
     output_path = Path(args.output_path)
     if not output_path.exists():
@@ -349,7 +335,7 @@ def main():
         "0": {
             "header_filename": "headers/header.csv",
             "output_filename": output_path / "header.csv.gz",
-            "transform_function": lambda row: [row],
+            "transform_function": lambda row, censor: [row],
         },
         "1": {
             "header_filename": "headers/empresa.csv",
@@ -369,7 +355,7 @@ def main():
         "9": {
             "header_filename": "headers/trailler.csv",
             "output_filename": output_path / "trailler.csv.gz",
-            "transform_function": lambda row: [row],
+            "transform_function": lambda row, censor: [row],
         },
     }
     header_definitions, output_writers, transform_functions = {}, {}, {}

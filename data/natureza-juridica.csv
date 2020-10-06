@@ -1,0 +1,67 @@
+codigo,natureza_juridica,representante_da_entidade,qualificacao,categoria,codigo_categoria
+1015,Órgão Público do Poder Executivo Federal,Administrador,05,Administração Pública,1
+1023,Órgão Público do Poder Executivo Estadual ou do Distrito Federal,Administrador,05,Administração Pública,1
+1031,Órgão Público do Poder Executivo Municipal,Administrador,05,Administração Pública,1
+1040,Órgão Público do Poder Legislativo Federal,Administrador,05,Administração Pública,1
+1058,Órgão Público do Poder Legislativo Estadual ou do Distrito Federal,Administrador,05,Administração Pública,1
+1066,Órgão Público do Poder Legislativo Municipal,Administrador,05,Administração Pública,1
+1074,Órgão Público do Poder Judiciário Federal,Administrador,05,Administração Pública,1
+1082,Órgão Público do Poder Judiciário Estadual,Administrador,05,Administração Pública,1
+1104,Autarquia Federal,Administrador ou Presidente,05|16,Administração Pública,1
+1112,Autarquia Estadual ou do Distrito Federal,Administrador ou Presidente,05|16,Administração Pública,1
+1120,Autarquia Municipal,Administrador ou Presidente,05|16,Administração Pública,1
+1139,Fundação Federal,Presidente,16,Administração Pública,1
+1147,Fundação Estadual ou do Distrito Federal,Presidente,16,Administração Pública,1
+1155,Fundação Municipal,Presidente,16,Administração Pública,1
+1163,Órgão Público Autônomo Federal,Administrador,05,Administração Pública,1
+1171,Órgão Público Autônomo Estadual ou do Distrito Federal,Administrador,05,Administração Pública,1
+1180,Órgão Público Autônomo Municipal,Administrador,05,Administração Pública,1
+1198,Comissão Polinacional,Administrador,05,Administração Pública,1
+1201,Fundo Público,Administrador,05,Administração Pública,1
+1210,Associação Pública,Presidente,16,Administração Pública,1
+2011,Empresa Pública,"Administrador, Diretor ou Presidente",05|10|16,Entidades Empresariais,2
+2038,Sociedade de Economia Mista,Diretor ou Presidente,10|16,Entidades Empresariais,2
+2046,Sociedade Anônima Aberta,"Administrador, Diretor ou Presidente",05|10|16,Entidades Empresariais,2
+2054,Sociedade Anônima Fechada,"Administrador, Diretor ou Presidente",05|10|16,Entidades Empresariais,2
+2062,Sociedade Empresária Limitada,Administrador ou Sócio-Administrador,05|49,Entidades Empresariais,2
+2070,Sociedade Empresária em Nome Coletivo,Sócio-Administrador,49,Entidades Empresariais,2
+2089,Sociedade Empresária em Comandita Simples,Sócio Comanditado,24,Entidades Empresariais,2
+2097,Sociedade Empresária em Comandita por Ações,Diretor ou Presidente,10|16,Entidades Empresariais,2
+2127,Sociedade em Conta de Participação,Procurador ou Sócio Ostensivo,17|31,Entidades Empresariais,2
+2135,Empresário (Individual),Empresário,50,Entidades Empresariais,2
+2143,Cooperativa,Diretor ou Presidente,10|16,Entidades Empresariais,2
+2151,Consórcio de Sociedades,Administrador,05,Entidades Empresariais,2
+2160,Grupo de Sociedades,Administrador,05,Entidades Empresariais,2
+2178,"Estabelecimento, no Brasil, de Sociedade Estrangeira",Procurador,17,Entidades Empresariais,2
+2194,"Estabelecimento, no Brasil, de Empresa Binacional Argentino-Brasileira",Procurador,17,Entidades Empresariais,2
+2216,Empresa Domiciliada no Exterior,Procurador,17,Entidades Empresariais,2
+2224,Clube/Fundo de Investimento,Responsável,43,Entidades Empresariais,2
+2232,Sociedade Simples Pura,Administrador ou Sócio-Administrador,05|49,Entidades Empresariais,2
+2240,Sociedade Simples Limitada,Administrador ou Sócio-Administrador,05|49,Entidades Empresariais,2
+2259,Sociedade Simples em Nome Coletivo,Sócio-Administrador,49,Entidades Empresariais,2
+2267,Sociedade Simples em Comandita Simples,Sócio Comanditado,24,Entidades Empresariais,2
+2275,Empresa Binacional,Diretor,10,Entidades Empresariais,2
+2283,Consórcio de Empregadores,Administrador,05,Entidades Empresariais,2
+2291,Consórcio Simples,Administrador,05,Entidades Empresariais,2
+2305,Empresa Individual de Responsabilidade Limitada (de Natureza Empresária),"Administrador, Procurador ou Titular Pessoa Física Residente ou Domiciliado no Brasil",05|17|65,Entidades Empresariais,2
+2313,Empresa Individual de Responsabilidade Limitada (de Natureza Simples),"Administrador, Procurador ou Titular Pessoa Física Residente ou Domiciliado no Brasil",05|17|65,Entidades Empresariais,2
+3034,Serviço Notarial e Registral (Cartório),Tabelião ou Oficial de Registro,32|42,Entidades Sem Fins Lucrativos,3
+3069,Fundação Privada,"Administrador, Diretor, Presidente ou Fundador",05|10|16|54,Entidades Sem Fins Lucrativos,3
+3077,Serviço Social Autônomo,Administrador,05,Entidades Sem Fins Lucrativos,3
+3085,Condomínio Edilício,Administrador ou Síndico (Condomínio),05|19,Entidades Sem Fins Lucrativos,3
+3107,Comissão de Conciliação Prévia,Administrador,05,Entidades Sem Fins Lucrativos,3
+3115,Entidade de Mediação e Arbitragem,Administrador,05,Entidades Sem Fins Lucrativos,3
+3123,Partido Político,Administrador ou Presidente,05|16,Entidades Sem Fins Lucrativos,3
+3131,Entidade Sindical,Administrador ou Presidente,05|16,Entidades Sem Fins Lucrativos,3
+3204,"Estabelecimento, no Brasil, de Fundação ou Associação Estrangeiras",Procurador,17,Entidades Sem Fins Lucrativos,3
+3212,Fundação ou Associação domiciliada no exterior,Procurador,17,Entidades Sem Fins Lucrativos,3
+3220,Organização Religiosa,"Administrador, Diretor ou Presidente",05|10|16,Entidades Sem Fins Lucrativos,3
+3239,Comunidade Indígena,Responsável Indígena,61,Entidades Sem Fins Lucrativos,3
+3247,Fundo Privado,Administrador,05,Entidades Sem Fins Lucrativos,3
+3999,Associação Privada,"Administrador, Diretor ou Presidente",05|10|16,Entidades Sem Fins Lucrativos,3
+4014,Empresa Individual Imobiliária,Titular,34,Pessoas Físicas,4
+4081,Contribuinte Individual,Produtor Rural,59,Pessoas Físicas,4
+4090,Candidato a Cargo Político Eletivo,Candidato a Cargo Político Eletivo,51,Pessoas Físicas,4
+5010,Organização Internacional,Representante de Organização Internacional,41,Instituições Extraterritoriais,5
+5029,Representação Diplomática Estrangeira,"Diplomata, Cônsul, Ministro de Estado das Relações Exteriores ou Cônsul Honorário",39|40|46|60,Instituições Extraterritoriais,5
+5037,Outras Instituições Extraterritoriais,Representante da Instituição Extraterritorial,62,Instituições Extraterritoriais,5

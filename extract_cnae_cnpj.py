@@ -1,6 +1,5 @@
 import argparse
 import csv
-from pathlib import Path
 
 import rows
 from tqdm import tqdm
