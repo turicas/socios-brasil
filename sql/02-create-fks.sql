@@ -1,7 +1,7 @@
 -- CNPJ
 ALTER TABLE cnae_cnpj ADD CONSTRAINT fk_cnae_cnpj_cnpj FOREIGN KEY (cnpj) REFERENCES empresa (cnpj);
-ALTER TABLE empresa_socia ADD CONSTRAINT fk_empresa_socia_cnpj FOREIGN KEY (cnpj) REFERENCES empresa (cnpj);
---ALTER TABLE empresa_socia ADD CONSTRAINT fk_empresa_socia_cnpj_cpf_do_socio FOREIGN KEY (cnpj_cpf_do_socio) REFERENCES empresa (cnpj);
+ALTER TABLE holding ADD CONSTRAINT fk_holding_cnpj FOREIGN KEY (cnpj) REFERENCES empresa (cnpj);
+ALTER TABLE holding ADD CONSTRAINT fk_holding_holding_cnpj FOREIGN KEY (holding_cnpj) REFERENCES empresa (cnpj);
 ALTER TABLE socio ADD CONSTRAINT fk_socio_cnpj FOREIGN KEY (cnpj) REFERENCES empresa (cnpj);
 
 -- CNAE
