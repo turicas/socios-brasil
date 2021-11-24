@@ -1,0 +1,13 @@
+field_original_name,description,field_name,field_type
+CNPJ BÁSICO,NÚMERO BASE DE INSCRIÇÃO NO CNPJ (OITO PRIMEIROS DÍGITOS DO CNPJ),cnpj_raiz,text
+RAZÃO SOCIAL / NOME EMPRESARIAL,NOME EMPRESARIAL DA PESSOA JURÍDICA,razao_social,text
+NATUREZA JURÍDICA,CÓDIGO DA NATUREZA JURÍDICA,codigo_natureza_juridica,integer
+QUALIFICAÇÃO DO RESPONSÁVEL,QUALIFICAÇÃO DA PESSOA FÍSICA RESPONSÁVEL PELA EMPRESA,codigo_qualificacao_responsavel,integer
+CAPITAL SOCIAL DA EMPRESA,CAPITAL SOCIAL DA EMPRESA,capital_social,text
+PORTE DA EMPRESA,"CÓDIGO DO PORTE DA EMPRESA:
+1: NÃO INFORMADO
+2: MICRO EMPRESA
+03: EMPRESA DE PEQUENO PORTE
+05: DEMAIS",codigo_porte,integer
+ENTE FEDERATIVO RESPONSÁVEL,"Ente federativo responsável. Deve ser preenchido para os casos de Órgãos e Entidades do grupo de Natureza Jurídica 1XX. Para as demais naturezas, esse atributo fica em branco.
+Exemplos de texto que deverão aparecer no arquivo final: UNIÃO; DISTRITO FEDERAL; BAHIA; para municípios, exibir também a sigla da UF: SÃO PAULO – SP; BELO HORIZONTE – MG;",ente_federativo,text

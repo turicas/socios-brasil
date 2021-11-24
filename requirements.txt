@@ -1,5 +1,5 @@
 click
-git+https://github.com/turicas/rows.git@develop#egg=rows
+https://github.com/turicas/rows/archive/develop.zip
 lxml
 requests
 requests-cache

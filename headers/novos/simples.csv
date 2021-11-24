@@ -1,0 +1,14 @@
+field_original_name,description,field_name,field_type
+CNPJ BÁSICO,NÚMERO BASE DE INSCRIÇÃO NO CNPJ (OITO PRIMEIROS DÍGITOS DO CNPJ).,cnpj_raiz,text
+OPÇÃO PELO SIMPLES,"INDICADOR DA EXISTÊNCIA DA OPÇÃO PELO SIMPLES.
+S - SIM
+N - NÃO
+EM BRANCO - OUTROS",opcao_simples,text
+DATA DE OPÇÃO PELO SIMPLES,DATA DE OPÇÃO PELO SIMPLES,data_opcao_simples,text
+DATA DE EXCLUSÃO DO SIMPLES,DATA DE EXCLUSÃO DO SIMPLES,data_exclusao_simples,text
+OPÇÃO PELO MEI,"INDICADOR DA EXISTÊNCIA DA OPÇÃO PELO MEI
+S - SIM
+N - NÃO
+EM BRANCO – OUTROS",opcao_mei,text
+DATA DE OPÇÃO PELO MEI,DATA DE OPÇÃO PELO MEI,data_opcao_mei,text
+DATA DE EXCLUSÃO DO MEI,DATA DE EXCLUSÃO DO MEI,data_exclusao_mei,text

@@ -1,0 +1,28 @@
+field_original_name,description,field_name,field_type
+CNPJ BÁSICO,NÚMERO BASE DE INSCRIÇÃO NO CNPJ (CADASTRO NACIONAL DA PESSOA JURÍDICA).,cnpj_raiz,text
+IDENTIFICADOR DE SÓCIO,"CÓDIGO DO IDENTIFICADOR DE SÓCIO
+1 – PESSOA JURÍDICA
+2 – PESSOA FÍSICA
+3 – ESTRANGEIRO",codigo_identificador,integer
+NOME DO SÓCIO (NO CASO PF) OU RAZÃO SOCIAL (NO CASO PJ),NOME DO SÓCIO PESSOA FÍSICA OU A RAZÃO SOCIAL E/OU NOME EMPRESARIAL DA PESSOA JURÍDICA E/OU NOME DO SÓCIO/RAZÃO SOCIAL DO SÓCIO ESTRANGEIRO,nome,text
+CNPJ/CPF DO SÓCIO,"CPF OU CNPJ DO SÓCIO (SÓCIO ESTRANGEIRO NÃO TEM ESTA INFORMAÇÃO).
+O campo deve ser descaracterizado conforme a regra: ocultação de informações pessoais sigilosas como no caso do CPF, o qual deve ser descaracterizado por meio da ocultação dos três primeiros dígitos e dos dois dígitos verificadores, conforme orientação disposta no art. 129 § 2o da Lei no 13.473/2017 (LDO 2018).",cpf_cnpj,text
+QUALIFICAÇÃO DO SÓCIO,CÓDIGO DA QUALIFICAÇÃO DO SÓCIO,codigo_qualificacao,integer
+DATA DE ENTRADA SOCIEDADE,DATA DE ENTRADA NA SOCIEDADE,data_entrada_sociedade,text
+PAIS,CÓDIGO PAÍS DO SÓCIO ESTRANGEIRO,codigo_pais,integer
+REPRESENTANTE LEGAL,"NÚMERO DO CPF DO REPRESENTANTE LEGAL
+O campo deve ser descaracterizado conforme a regra: ocultação de informações pessoais sigilosas como no caso do CPF, o qual deve ser descaracterizado por meio da ocultação dos três primeiros dígitos e dos dois dígitos verificadores, conforme orientação disposta no art. 129 § 2o da Lei no 13.473/2017 (LDO 2018).",representante_cpf_cnpj,text
+NOME DO REPRESENTANTE,NOME DO REPRESENTANTE LEGAL,representante,text
+QUALIFICAÇÃO DO REPRESENTANTE LEGAL,CÓDIGO DA QUALIFICAÇÃO DO REPRESENTANTE LEGAL,representante_codigo_qualificacao,integer
+FAIXA ETÁRIA,"CÓDIGO CORRESPONDENTE À FAIXA ETÁRIA DO SÓCIO
+Valores possíveis:
+1: 0 a 12 anos
+2: 13 a 20 anos
+3: 21 a 30 anos
+4: 31 a 40 anos
+5: 41 a 50 anos
+6: 51 a 60 anos
+7: 61 a 70 anos
+8: 71 a 80 anos
+9: mais de 80 anos
+0: não se aplica",codigo_faixa_etaria,integer
