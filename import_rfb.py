@@ -1,65 +1,204 @@
+"""Import downloaded data to PostgreSQL"""
+import fnmatch
+import warnings
 import zipfile
+from functools import cached_property
 from pathlib import Path
 
-import rows
 from rows.plugins.postgresql import PostgresCopy
-from rows.utils import NotNullWrapper, ProgressBar, load_schema
+from rows.utils import NotNullWrapper, ProgressBar, load_schema, subclasses
+
+SCHEMA_PATH = Path(__file__).parent / "headers" / "novos"
 
 
-def import_zipfiles(database_url, schema_path, zip_path):
-    schema_glob = {
-        "empresa.csv": "*EMPRECSV.zip",
-        "estabelecimento.csv": "*ESTABELE.zip",
-        "socio.csv": "*SOCIOCSV.zip",
-        "simples.csv": "*SIMPLES.CSV*zip",
-        # TODO: import "Dados Abertos Sítio RFB*.zip"
-        # TODO: import "*CNAECSV.zip"
-        # TODO: import "*MOTICSV.zip"
-        # TODO: import "*MUNICCSV.zip"
-        # TODO: import "*NATJUCSV.zip"
-        # TODO: import "*PAISCSV.zip"
-        # TODO: import "*QUALSCSV.zip"
-    }
-    encoding = "iso-8859-15"
-    dialect = "excel-semicolon"
-    skip_header = True
-    unlogged = True
-    schema_path = Path(schema_path)
-    zip_path = Path(zip_path)
-    pgcopy = PostgresCopy(database_url)
+class TableConfig:
+    """Base class to handle table configurations during import"""
 
-    for schema_name, zip_glob in schema_glob.items():
-        table_name = schema_name.lower().replace(".csv", "").strip()
-        schema = load_schema(str(schema_path / schema_name))
+    filename_pattern: str  # Glob pattern for ZIP filename
+    schema_filename: str  # Schema filename to use when importing
+    has_header: bool  # Does the CSV file's first line is the header?
+    name: str  # Table name to be imported
+    inner_filename_pattern: str = None  # Glob pattern for filename inside ZIP
+    # archive (if not specified, all files in archive are used)
+    encoding: str = "iso-8859-15"  # Encoding for CSV
+    dialect: str = "excel-semicolon"  # Dialect for CSV
 
-        filenames = sorted(zip_path.glob(zip_glob))
-        for counter, zip_filename in enumerate(filenames, start=1):
+    @classmethod
+    def subclasses(cls):
+        return {class_.name: class_ for class_ in subclasses(cls)}
+
+    @cached_property
+    def schema(self):
+        return load_schema(str(SCHEMA_PATH / self.schema_filename))
+
+    def filenames(self, zip_path):
+        """List of zip files which matches this table's ZIP archive pattern"""
+        zip_path = Path(zip_path)
+        return sorted(zip_path.glob(self.filename_pattern))
+
+    def load(self, zip_path, database_url, unlogged=False, access_method=None):
+        """Load data into PostgreSQL database"""
+
+        progress_bar = ProgressBar(
+            pre_prefix=f"Importing {self.name} (calculating size)",
+            prefix="",
+            unit="bytes",
+        )
+
+        # First, select all zip files and inner files to load
+        filenames = self.filenames(zip_path)
+        uncompressed_size, files_to_extract = 0, []
+        for zip_filename in filenames:
             zf = zipfile.ZipFile(zip_filename)
-            fobj = zf.open(zf.filelist[0].filename)
+            files_infos = [file_info for file_info in zf.filelist]
+            if self.inner_filename_pattern:
+                files_infos = [
+                    file_info
+                    for file_info in files_infos
+                    if fnmatch.fnmatch(file_info.filename, self.inner_filename_pattern)
+                ]
+            if not files_infos:
+                warnings.warn(f"Cannot match inner files in {zip_filename}", RuntimeWarning)
+            files_to_extract.append((zf, files_infos))
+            uncompressed_size += sum(file_info.file_size for file_info in files_infos)
 
-            progress_bar = ProgressBar(
-                prefix=f"Importing {table_name} ({counter}/{len(filenames)})",
-                unit="bytes",
-            )
-            result = pgcopy.import_from_fobj(
-                fobj=NotNullWrapper(fobj),
-                table_name=table_name,
-                encoding=encoding,
-                dialect=dialect,
-                schema=schema,
-                skip_header=skip_header,
-                unlogged=unlogged,
-                callback=progress_bar.update,
-            )
-            progress_bar.description = "{} rows imported".format(result["rows_imported"])
-            progress_bar.close()
+        pgcopy = PostgresCopy(database_url)
+        progress_bar.prefix = progress_bar.description = "Importing {self.name} (ZIP 0/{len(files_to_extract)})"
+        progress_bar.total = uncompressed_size
+        rows_imported = 0
+        for counter, (zf, files_infos) in enumerate(files_to_extract, start=1):
+            progress_bar.prefix = progress_bar.description = f"Importing {self.name} (ZIP {counter}/{len(files_to_extract)})"
+            for file_info in files_infos:
+                # TODO: check if table already exists/has rows before importing?
+                fobj = zf.open(file_info.filename)
+                result = pgcopy.import_from_fobj(
+                    fobj=NotNullWrapper(fobj),
+                    table_name=self.name,
+                    encoding=self.encoding,
+                    dialect=self.dialect,
+                    schema=self.schema,
+                    skip_header=not self.has_header,
+                    unlogged=unlogged,
+                    access_method=access_method,
+                    callback=progress_bar.update,
+                )
+                rows_imported += result["rows_imported"]
+        progress_bar.description = f"[{self.name}] {rows_imported} rows imported"
+        progress_bar.close()
+
+
+class Empresa(TableConfig):
+    filename_pattern = "*EMPRECSV.zip"
+    has_header = False
+    name = "empresa"
+    schema_filename = "empresa.csv"
+
+
+class Estabelecimento(TableConfig):
+    filename_pattern = "*ESTABELE.zip"
+    has_header = False
+    name = "estabelecimento"
+    schema_filename = "estabelecimento.csv"
+
+
+class Simples(TableConfig):
+    filename_pattern = "*SIMPLES.CSV*zip"
+    has_header = False
+    name = "simples"
+    schema_filename = "simples.csv"
+
+
+class Socio(TableConfig):
+    filename_pattern = "*SOCIOCSV.zip"
+    has_header = False
+    name = "socio"
+    schema_filename = "socio.csv"
+
+
+class MotivoSituacaoCadastral(TableConfig):
+    filename_pattern = "*MOTICSV.zip"
+    has_header = False
+    name = "motivo_situacao_cadastral"
+    schema_filename = "mapeamento.csv"
+
+
+class Cnae(TableConfig):
+    filename_pattern = "*CNAECSV.zip"
+    has_header = False
+    name = "cnae"
+    schema_filename = "mapeamento.csv"
+
+
+class NaturezaJuridica(TableConfig):
+    filename_pattern = "*NATJUCSV.zip"
+    has_header = False
+    name = "natureza_juridica"
+    schema_filename = "mapeamento.csv"
+
+
+class Municipio(TableConfig):
+    filename_pattern = "*MUNICCSV.zip"
+    has_header = False
+    name = "municipio"
+    schema_filename = "mapeamento.csv"
+
+
+class Pais(TableConfig):
+    filename_pattern = "*PAISCSV.zip"
+    has_header = False
+    name = "pais"
+    schema_filename = "mapeamento.csv"
+
+
+class QualificacaoSocio(TableConfig):
+    filename_pattern = "*QUALSCSV.zip"
+    has_header = False
+    name = "qualificacao_socio"
+    schema_filename = "mapeamento.csv"
+
+
+class RegimeTributario(TableConfig):
+    dialect = "excel"
+    filename_pattern = "Dados Abertos Sítio RFB*.zip"
+    has_header = True
+    inner_filename_pattern = "*.csv"
+    name = "regime_tributario"
+    schema_filename = "regime_tributario.csv"
 
 
 if __name__ == "__main__":
+    import argparse
     import os
+    import sys
 
-    current = Path(__file__).parent
-    database_url = os.environ["DATABASE_URL"]
-    schema_path = current / "headers" / "novos"
-    zip_path = current / "data" / "download-2021-10-14"
-    import_zipfiles(database_url, schema_path, zip_path)
+    table_classes = TableConfig.subclasses()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--unlogged", action="store_true")
+    parser.add_argument("--access-method", choices=["heap", "columnar"], default="heap")
+    parser.add_argument("--database-url")
+    parser.add_argument("download_path")
+    parser.add_argument(
+        "table",
+        nargs="+",
+        choices=["all"] + list(table_classes.keys()),
+        help="Table to import (shortcut to all tables: 'all')",
+    )
+    args = parser.parse_args()
+
+    database_url = args.database_url or os.environ.get("DATABASE_URL")
+    if database_url is None:
+        print("Error: you must specify either --database-url or set DATABASE_URL env var", file=sys.stderr)
+        exit(1)
+
+    tables_to_import = list(table_classes.keys()) if args.table[0].lower() == "all" else args.table
+    for name, Table in table_classes.items():
+        if name not in tables_to_import:
+            continue
+
+        table = Table()
+        table.load(
+            args.download_path,
+            database_url,
+            unlogged=args.unlogged,
+            access_method=args.access_method,
+        )

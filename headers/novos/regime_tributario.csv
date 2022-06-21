@@ -1,0 +1,6 @@
+"field_original_name","description","field_name","field_type"
+"ano","Ano (inteiro de 4 dígitos, de 2014 a 2020)","ano","integer"
+"cnpj","CNPJ formatado (ex: 11.111.111/0001-91)","cnpj","text"
+"forma_de_tributacao","Forma de tributação. Pode conter os valores: LUCRO PRESUMIDO, LUCRO PRESUMIDO/ARBITRADO, LUCRO PRESUMIDO/REAL ou LUCRO PRESUMIDO/REAL/ARBITRADO. Nos poucos casos de tributação de formas mistas, a informação do CNPJ aparece em todos os arquivos correspondentes às formas de tributação abrangidas","forma_tributacao","text"
+"municipio","Município informado na escrituração","municipio","text"
+"uf","Unidade Federativa informado na escrituração","uf","text"

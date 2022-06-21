@@ -5,7 +5,7 @@ from urllib.parse import urljoin
 
 import requests
 from lxml.html import document_fromstring
-from rows.utils.download import Downloader, Download
+from rows.utils.download import Download, Downloader
 
 REGEXP_DATE = re.compile("_([0-9]{4})([0-9]{2})([0-9]{2})[_.]")
 
