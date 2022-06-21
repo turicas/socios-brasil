@@ -1,0 +1,19 @@
+services:
+  db:
+    image: citusdata/citus:10.2-pg14
+    env_file: .env
+    shm_size: 256m
+    ports:
+      - 5432:5432
+    volumes:
+      - ./docker/data/postgres:/var/lib/postgresql/data
+
+  main:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: .env
+    volumes:
+      - .:/app
+    depends_on:
+      - db

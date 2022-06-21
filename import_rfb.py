@@ -59,7 +59,7 @@ if __name__ == "__main__":
     import os
 
     current = Path(__file__).parent
-    database_url = os.environ["POSTGRESQL_URI"]
+    database_url = os.environ["DATABASE_URL"]
     schema_path = current / "headers" / "novos"
     zip_path = current / "data" / "download-2021-10-14"
     import_zipfiles(database_url, schema_path, zip_path)

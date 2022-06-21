@@ -1,6 +1,7 @@
 click
 https://github.com/turicas/rows/archive/develop.zip
 lxml
+psycopg2-binary
 requests
 requests-cache
 scrapy
