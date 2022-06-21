@@ -12,6 +12,13 @@ def import_zipfiles(database_url, schema_path, zip_path):
         "estabelecimento.csv": "*ESTABELE.zip",
         "socio.csv": "*SOCIOCSV.zip",
         "simples.csv": "*SIMPLES.CSV*zip",
+        # TODO: import "Dados Abertos Sítio RFB*.zip"
+        # TODO: import "*CNAECSV.zip"
+        # TODO: import "*MOTICSV.zip"
+        # TODO: import "*MUNICCSV.zip"
+        # TODO: import "*NATJUCSV.zip"
+        # TODO: import "*PAISCSV.zip"
+        # TODO: import "*QUALSCSV.zip"
     }
     encoding = "iso-8859-15"
     dialect = "excel-semicolon"

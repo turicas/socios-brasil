@@ -5,12 +5,12 @@ from urllib.parse import urljoin
 
 import requests
 from lxml.html import document_fromstring
-from rows.utils.download import Downloader, DownloadLink
+from rows.utils.download import Downloader, Download
 
 REGEXP_DATE = re.compile("_([0-9]{4})([0-9]{2})([0-9]{2})[_.]")
 
 
-def download_history(year, path_pattern="data/download/{date}/{filename}", downloader="aria2c-file"):
+def download_history(year, path_pattern="data/download/{date}/{filename}", downloader="aria2c"):
     url = f"http://200.152.38.155/CNPJ_historico/{year}/"
     response = requests.get(url)
     tree = document_fromstring(response.text)
@@ -23,9 +23,9 @@ def download_history(year, path_pattern="data/download/{date}/{filename}", downl
         year, month, day = result[0]
         date = f"{year}-{month}-{day}"
         downloader.add(
-            DownloadLink(
+            Download(
                 url=urljoin(url, filename),
-                save_path=Path(path_pattern.format(date=date, filename=filename)).absolute(),
+                filename=Path(path_pattern.format(date=date, filename=filename)).absolute(),
             )
         )
     downloader.run()
@@ -70,7 +70,7 @@ def main():
     subclasses = Downloader.subclasses()
     parser = argparse.ArgumentParser()
     parser.add_argument("--path-pattern", default="data/download/{date}/{filename}")
-    parser.add_argument("--downloader", choices=list(subclasses.keys()), default="aria2c-file")
+    parser.add_argument("--downloader", choices=list(subclasses.keys()), default="aria2c")
     parser.add_argument("--mirror", action="store_true")
     parser.add_argument("versao", choices=("historico-2021", "historico-2022", "atual"))
     args = parser.parse_args()
@@ -91,9 +91,9 @@ def main():
         downloader = subclasses[args.downloader]()
         downloader.add_many(
             [
-                DownloadLink(
+                Download(
                     url=link,
-                    save_path=args.path_pattern.format(date=date, filename=Path(link).name),
+                    filename=args.path_pattern.format(date=date, filename=Path(link).name),
                 )
                 for link in receita.links
             ]
