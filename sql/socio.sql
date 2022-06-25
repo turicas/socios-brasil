@@ -12,7 +12,10 @@ CREATE TABLE socio_uuid AS
     UPPER(REPLACE(slug(nome), '-', ' ')) AS nome,
     cpf_cnpj,
     codigo_qualificacao,
-    TO_DATE(data_entrada_sociedade, 'YYYYMMDD') AS data_entrada_sociedade,
+    CASE
+      WHEN data_entrada_sociedade IN ('00000000', '0') THEN NULL
+      ELSE TO_DATE(data_entrada_sociedade, 'YYYYMMDD')
+    END AS data_entrada_sociedade,
     codigo_pais,
     CASE
       WHEN representante IS NULL THEN NULL

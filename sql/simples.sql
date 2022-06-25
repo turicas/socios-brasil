@@ -9,11 +9,11 @@ CREATE TABLE simples_uuid AS
       ELSE NULL
     END AS opcao_simples,
     CASE
-      WHEN data_opcao_simples = '00000000' THEN NULL
+      WHEN data_opcao_simples IN ('00000000', '0') THEN NULL
       ELSE TO_DATE(data_opcao_simples, 'YYYYMMDD')
     END AS data_opcao_simples,
     CASE
-      WHEN data_exclusao_simples = '00000000' THEN NULL
+      WHEN data_exclusao_simples IN ('00000000', '0') THEN NULL
       ELSE TO_DATE(data_exclusao_simples, 'YYYYMMDD')
     END AS data_exclusao_simples,
     CASE
@@ -22,11 +22,11 @@ CREATE TABLE simples_uuid AS
       ELSE NULL
     END AS opcao_mei,
     CASE
-      WHEN data_opcao_mei = '00000000' THEN NULL
+      WHEN data_opcao_mei IN ('00000000', '0') THEN NULL
       ELSE TO_DATE(data_opcao_mei, 'YYYYMMDD')
     END AS data_opcao_mei,
     CASE
-      WHEN data_exclusao_mei = '00000000' THEN NULL
+      WHEN data_exclusao_mei IN ('00000000', '0') THEN NULL
       ELSE TO_DATE(data_exclusao_mei, 'YYYYMMDD')
     END AS data_exclusao_mei
   FROM simples;

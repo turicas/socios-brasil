@@ -2,11 +2,13 @@ services:
   db:
     image: citusdata/citus:10.2-pg14
     env_file: .env
-    shm_size: 256m
+    shm_size: 1g
     ports:
       - 5432:5432
     volumes:
       - ./docker/data/postgres:/var/lib/postgresql/data
+      - ./docker/postgresql.conf:/etc/postgresql/postgresql.conf
+    command: -c "config_file=/etc/postgresql/postgresql.conf"
 
   main:
     build:

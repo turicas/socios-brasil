@@ -1,0 +1,604 @@
+-- Erro em municipio: não possui UF
+-- A tabela anexa de municípios contém apenas os códigos e nomes dos
+-- municípios, mas não a UF. 523 municípios possuem nomes repetidos (no total,
+-- são 241 nomes) e o fato de não ter a UF dificulta em filtros e análises.
+
+
+-- Erro em empresa: CNPJ raiz duplicado
+SELECT cnpj_raiz, COUNT(*)
+FROM empresa
+GROUP BY cnpj_raiz
+HAVING COUNT(*) > 1;
+--  cnpj_raiz | count
+-- -----------+-------
+--  11895269  |     2
+
+
+-- Erro em empresa: razão social/código da natureza jurídica nulos
+SELECT *
+FROM empresa
+WHERE razao_social IS NULL OR codigo_natureza_juridica = 0;
+-- -[ RECORD 1 ]-------------------+---------
+-- cnpj_raiz                       | 07949190
+-- razao_social                    |
+-- codigo_natureza_juridica        | 0
+-- codigo_qualificacao_responsavel | 0
+-- capital_social                  | 0,00
+-- codigo_porte                    |
+-- ente_federativo                 |
+-- -[ RECORD 2 ]-------------------+---------
+-- cnpj_raiz                       | 11895269
+-- razao_social                    |
+-- codigo_natureza_juridica        | 0
+-- codigo_qualificacao_responsavel | 0
+-- capital_social                  | 0,00
+-- codigo_porte                    |
+-- ente_federativo                 |
+
+
+-- Erro em regime_tributario: UF e Município com valor NULL (string)
+SELECT *
+FROM regime_tributario
+WHERE uf = 'NULL' OR municipio = 'NULL';
+--  ano  |        cnpj        | forma_tributacao | municipio |  uf
+-- ------+--------------------+------------------+-----------+------
+--  2020 | 01.162.285/0001-20 | ISENTA DO IRPJ   | NULL      | RS
+--  2020 | 03.905.241/0001-78 | IMUNE DO IRPJ    | NULL      | RS
+--  2020 | 04.578.375/0001-94 | ISENTA DO IRPJ   | NULL      | RS
+--  2020 | 15.783.862/0001-05 | IMUNE DO IRPJ    | NULL      | RS
+--  2020 | 19.960.594/0001-00 | ISENTA DO IRPJ   | NULL      | RS
+--  2020 | 22.793.762/0001-25 | ISENTA DO IRPJ   | NULL      | RS
+--  2020 | 29.333.891/0001-80 | ISENTA DO IRPJ   | NULL      | RS
+--  2020 | 35.117.302/0001-29 | ISENTA DO IRPJ   | NULL      | RS
+--  2020 | 35.834.448/0001-95 | IMUNE DO IRPJ    | NULL      | RS
+--  2020 | 91.986.232/0001-16 | ISENTA DO IRPJ   | NULL      | RS
+--  2019 | 01.162.285/0001-20 | ISENTA DO IRPJ   | NULL      | RS
+--  2019 | 04.578.375/0001-94 | ISENTA DO IRPJ   | NULL      | RS
+--  2019 | 04.880.553/0001-37 | ISENTA DO IRPJ   | NULL      | RS
+--  2019 | 15.783.862/0001-05 | IMUNE DO IRPJ    | NULL      | RS
+--  2019 | 19.960.594/0001-00 | IMUNE DO IRPJ    | NULL      | RS
+--  2019 | 22.793.762/0001-25 | ISENTA DO IRPJ   | NULL      | RS
+--  2019 | 29.333.891/0001-80 | ISENTA DO IRPJ   | NULL      | RS
+--  2019 | 35.117.302/0001-29 | ISENTA DO IRPJ   | NULL      | RS
+--  2019 | 35.834.448/0001-95 | IMUNE DO IRPJ    | NULL      | RS
+--  2019 | 91.986.232/0001-16 | ISENTA DO IRPJ   | NULL      | RS
+--  2018 | 01.162.285/0001-20 | ISENTA DO IRPJ   | NULL      | RS
+--  2018 | 01.496.293/0001-02 | ISENTA DO IRPJ   | NULL      | RS
+--  2018 | 03.905.241/0001-78 | ISENTA DO IRPJ   | NULL      | RS
+--  2018 | 04.578.375/0001-94 | ISENTA DO IRPJ   | NULL      | RS
+--  2018 | 04.880.553/0001-37 | ISENTA DO IRPJ   | NULL      | RS
+--  2018 | 15.783.862/0001-05 | IMUNE DO IRPJ    | NULL      | RS
+--  2018 | 22.154.352/0001-34 | IMUNE DO IRPJ    | NULL      | RS
+--  2018 | 22.793.762/0001-25 | ISENTA DO IRPJ   | NULL      | RS
+--  2018 | 29.333.891/0001-80 | ISENTA DO IRPJ   | NULL      | RS
+--  2018 | 91.986.232/0001-16 | ISENTA DO IRPJ   | NULL      | RS
+--  2017 | 01.162.285/0001-20 | ISENTA DO IRPJ   | NULL      | RS
+--  2017 | 01.496.293/0001-02 | ISENTA DO IRPJ   | NULL      | RS
+--  2017 | 03.905.241/0001-78 | ISENTA DO IRPJ   | NULL      | RS
+--  2017 | 04.504.116/0001-19 | ISENTA DO IRPJ   | NULL      | RS
+--  2017 | 15.783.862/0001-05 | IMUNE DO IRPJ    | NULL      | RS
+--  2017 | 22.154.352/0001-34 | ISENTA DO IRPJ   | NULL      | RS
+--  2017 | 22.793.762/0001-25 | ISENTA DO IRPJ   | NULL      | RS
+--  2017 | 91.986.232/0001-16 | ISENTA DO IRPJ   | NULL      | RS
+--  2016 | 01.162.285/0001-20 | ISENTA DO IRPJ   | NULL      | RS
+--  2016 | 01.496.293/0001-02 | ISENTA DO IRPJ   | NULL      | RS
+--  2016 | 03.905.241/0001-78 | ISENTA DO IRPJ   | NULL      | RS
+--  2016 | 04.504.116/0001-19 | ISENTA DO IRPJ   | NULL      | RS
+--  2016 | 04.578.375/0001-94 | ISENTA DO IRPJ   | NULL      | RS
+--  2016 | 15.783.862/0001-05 | IMUNE DO IRPJ    | NULL      | RS
+--  2016 | 19.960.594/0001-00 | ISENTA DO IRPJ   | NULL      | RS
+--  2016 | 22.154.352/0001-34 | IMUNE DO IRPJ    | NULL      | RS
+--  2016 | 22.793.762/0001-25 | ISENTA DO IRPJ   | NULL      | RS
+--  2016 | 23.664.613/0001-29 | ISENTA DO IRPJ   | NULL      | NULL
+--  2016 | 81.144.537/0001-27 | ISENTA DO IRPJ   | NULL      | NULL
+--  2016 | 91.986.232/0001-16 | ISENTA DO IRPJ   | NULL      | RS
+--  2015 | 01.156.699/0001-46 | ISENTA DO IRPJ   | NULL      | RS
+--  2015 | 03.905.241/0001-78 | ISENTA DO IRPJ   | NULL      | RS
+--  2015 | 04.504.116/0001-19 | ISENTA DO IRPJ   | NULL      | RS
+--  2015 | 04.578.375/0001-94 | ISENTA DO IRPJ   | NULL      | RS
+--  2015 | 22.793.762/0001-25 | ISENTA DO IRPJ   | NULL      | RS
+--  2015 | 89.435.853/0001-60 | ISENTA DO IRPJ   | NULL      | RS
+--  2014 | 00.683.630/0001-08 | IMUNE DO IRPJ    | NULL      | NULL
+--  2020 | 00.844.081/0001-06 | LUCRO PRESUMIDO  | NULL      | RS
+--  2020 | 01.710.739/0001-50 | LUCRO PRESUMIDO  | NULL      | RS
+--  2020 | 21.082.464/0001-64 | LUCRO PRESUMIDO  | NULL      | RS
+--  2020 | 21.245.614/0001-03 | LUCRO PRESUMIDO  | NULL      | RS
+--  2020 | 28.809.040/0001-06 | LUCRO PRESUMIDO  | NULL      | RS
+--  2020 | 35.158.824/0001-79 | LUCRO PRESUMIDO  | NULL      | RS
+--  2020 | 89.831.788/0001-91 | LUCRO PRESUMIDO  | NULL      | RS
+--  2019 | 00.844.081/0001-06 | LUCRO PRESUMIDO  | NULL      | RS
+--  2019 | 01.710.739/0001-50 | LUCRO PRESUMIDO  | NULL      | RS
+--  2019 | 01.781.252/0001-68 | LUCRO PRESUMIDO  | NULL      | MS
+--  2019 | 01.781.252/0001-68 | LUCRO PRESUMIDO  | NULL      | NULL
+--  2019 | 21.082.464/0001-64 | LUCRO PRESUMIDO  | NULL      | RS
+--  2019 | 21.245.614/0001-03 | LUCRO PRESUMIDO  | NULL      | RS
+--  2019 | 27.666.621/0001-65 | LUCRO PRESUMIDO  | NULL      | NULL
+--  2019 | 28.492.896/0001-92 | LUCRO PRESUMIDO  | NULL      | RS
+--  2019 | 28.809.040/0001-06 | LUCRO PRESUMIDO  | NULL      | RS
+--  2019 | 35.158.824/0001-79 | LUCRO PRESUMIDO  | NULL      | RS
+--  2019 | 89.831.788/0001-91 | LUCRO PRESUMIDO  | NULL      | RS
+--  2018 | 00.844.081/0001-06 | LUCRO PRESUMIDO  | NULL      | RS
+--  2018 | 01.710.739/0001-50 | LUCRO PRESUMIDO  | NULL      | RS
+--  2018 | 02.247.166/0001-32 | LUCRO PRESUMIDO  | NULL      | RS
+--  2018 | 07.158.386/0001-03 | LUCRO PRESUMIDO  | NULL      | RS
+--  2018 | 11.010.403/0001-38 | LUCRO PRESUMIDO  | NULL      | RS
+--  2018 | 21.082.464/0001-64 | LUCRO PRESUMIDO  | NULL      | RS
+--  2018 | 21.245.614/0001-03 | LUCRO PRESUMIDO  | NULL      | RS
+--  2018 | 27.259.351/0001-78 | LUCRO PRESUMIDO  | NULL      | RS
+--  2018 | 28.492.896/0001-92 | LUCRO PRESUMIDO  | NULL      | RS
+--  2018 | 28.809.040/0001-06 | LUCRO PRESUMIDO  | NULL      | RS
+--  2018 | 89.831.788/0001-91 | LUCRO PRESUMIDO  | NULL      | RS
+--  2017 | 01.710.739/0001-50 | LUCRO PRESUMIDO  | NULL      | RS
+--  2017 | 02.247.166/0001-32 | LUCRO PRESUMIDO  | NULL      | RS
+--  2017 | 07.158.386/0001-03 | LUCRO PRESUMIDO  | NULL      | RS
+--  2017 | 11.010.403/0001-38 | LUCRO PRESUMIDO  | NULL      | RS
+--  2017 | 15.635.613/0001-72 | LUCRO PRESUMIDO  | NULL      | RS
+--  2017 | 21.082.464/0001-64 | LUCRO PRESUMIDO  | NULL      | RS
+--  2017 | 21.245.614/0001-03 | LUCRO PRESUMIDO  | NULL      | RS
+--  2017 | 24.213.308/0001-83 | LUCRO PRESUMIDO  | NULL      | NULL
+--  2017 | 24.241.105/0001-09 | LUCRO PRESUMIDO  | NULL      | RS
+--  2017 | 27.259.351/0001-78 | LUCRO PRESUMIDO  | NULL      | RS
+--  2017 | 28.151.327/0001-83 | LUCRO PRESUMIDO  | NULL      | RS
+--  2017 | 28.492.896/0001-92 | LUCRO PRESUMIDO  | NULL      | RS
+--  2017 | 28.809.040/0001-06 | LUCRO PRESUMIDO  | NULL      | RS
+--  2016 | 01.596.604/0001-05 | LUCRO PRESUMIDO  | NULL      | NULL
+--  2016 | 01.710.739/0001-50 | LUCRO PRESUMIDO  | NULL      | RS
+--  2016 | 02.247.166/0001-32 | LUCRO PRESUMIDO  | NULL      | RS
+--  2016 | 07.158.386/0001-03 | LUCRO PRESUMIDO  | NULL      | RS
+--  2016 | 09.070.286/0001-56 | LUCRO PRESUMIDO  | NULL      | RS
+--  2016 | 11.010.403/0001-38 | LUCRO PRESUMIDO  | NULL      | RS
+--  2016 | 14.292.595/0001-00 | LUCRO PRESUMIDO  | NULL      | RS
+--  2016 | 15.635.613/0001-72 | LUCRO PRESUMIDO  | NULL      | RS
+--  2016 | 21.082.464/0001-64 | LUCRO PRESUMIDO  | NULL      | RS
+--  2016 | 21.245.614/0001-03 | LUCRO PRESUMIDO  | NULL      | RS
+--  2016 | 24.241.105/0001-09 | LUCRO PRESUMIDO  | NULL      | RS
+--  2015 | 00.844.081/0001-06 | LUCRO PRESUMIDO  | NULL      | RS
+--  2015 | 01.710.739/0001-50 | LUCRO PRESUMIDO  | NULL      | RS
+--  2015 | 02.247.166/0001-32 | LUCRO PRESUMIDO  | NULL      | RS
+--  2015 | 09.070.286/0001-56 | LUCRO PRESUMIDO  | NULL      | RS
+--  2015 | 10.792.725/0001-13 | LUCRO PRESUMIDO  | NULL      | RS
+--  2015 | 11.010.403/0001-38 | LUCRO PRESUMIDO  | NULL      | RS
+--  2015 | 14.292.595/0001-00 | LUCRO PRESUMIDO  | NULL      | RS
+--  2015 | 21.082.464/0001-64 | LUCRO PRESUMIDO  | NULL      | RS
+--  2015 | 21.245.614/0001-03 | LUCRO PRESUMIDO  | NULL      | RS
+--  2015 | 89.831.788/0001-91 | LUCRO PRESUMIDO  | NULL      | RS
+--  2014 | 05.491.719/0001-96 | LUCRO PRESUMIDO  | NULL      | NULL
+--  2014 | 11.010.403/0001-38 | LUCRO PRESUMIDO  | NULL      | RS
+--  2014 | 19.865.208/0001-00 | LUCRO PRESUMIDO  | NULL      | NULL
+--  2014 | 21.082.464/0001-64 | LUCRO PRESUMIDO  | NULL      | RS
+--  2014 | 94.802.402/0001-53 | LUCRO PRESUMIDO  | NULL      | RS
+--  2020 | 28.492.896/0001-92 | LUCRO REAL       | NULL      | RS
+--  2020 | 87.547.980/0001-25 | LUCRO REAL       | NULL      | RS
+--  2020 | 94.802.402/0001-53 | LUCRO REAL       | NULL      | RS
+--  2019 | 87.547.980/0001-25 | LUCRO REAL       | NULL      | RS
+--  2019 | 94.802.402/0001-53 | LUCRO REAL       | NULL      | RS
+--  2018 | 87.547.980/0001-25 | LUCRO REAL       | NULL      | RS
+--  2018 | 94.802.402/0001-53 | LUCRO REAL       | NULL      | RS
+--  2017 | 83.305.235/0001-19 | LUCRO REAL       | NULL      | NULL
+--  2017 | 87.547.980/0001-25 | LUCRO REAL       | NULL      | RS
+--  2017 | 94.802.402/0001-53 | LUCRO REAL       | NULL      | RS
+--  2016 | 08.687.382/0001-85 | LUCRO REAL       | NULL      | NULL
+--  2016 | 87.547.980/0001-25 | LUCRO REAL       | NULL      | RS
+--  2014 | 02.366.978/0001-05 | LUCRO REAL       | NULL      | NULL
+--  2014 | 87.547.980/0001-25 | LUCRO REAL       | NULL      | RS
+
+
+-- Erro em estabelecimento: UF preenchido erroneamente como 'BR'
+SELECT *
+FROM estabelecimento
+WHERE uf = 'BR';
+-- -[ RECORD 1 ]--------------------+------------------
+-- cnpj_raiz                        | 05269598
+-- cnpj_ordem                       | 0001
+-- cnpj_dv                          | 32
+-- matriz_filial                    | 1
+-- nome_fantasia                    |
+-- codigo_situacao_cadastral        | 8
+-- data_situacao_cadastral          | 20021231
+-- codigo_motivo_situacao_cadastral | 1
+-- cidade_exterior                  |
+-- codigo_pais                      |
+-- data_inicio_atividade            | 20020911
+-- cnae_principal                   | 9492800
+-- cnae_secundaria                  |
+-- tipo_logradouro                  | RUA
+-- logradouro                       | DAS MARRECAS
+-- numero                           | 000027
+-- complemento                      | 3: ANDAR - CENTRO
+-- bairro                           |
+-- cep                              | 20031120
+-- uf                               | BR
+-- codigo_municipio                 | 6001
+-- ddd_1                            |
+-- telefone_1                       |
+-- ddd_2                            |
+-- telefone_2                       |
+-- ddd_do_fax                       |
+-- fax                              |
+-- correio_eletronico               | pcb@pcb.org.br
+-- situacao_especial                |
+-- data_situacao_especial           |
+
+
+-- Erro em estabelecimento: código do município inválido para UF
+SELECT cnpj_raiz, cnpj_ordem, cnpj_dv, cep, uf, codigo_municipio
+FROM estabelecimento
+WHERE codigo_municipio = '6969' AND uf <> 'SP';
+-[ RECORD 1 ]--------------------+-------------------------
+cnpj_raiz                        | 39868640
+cnpj_ordem                       | 0001
+cnpj_dv                          | 53
+cep                              | 68790000
+uf                               | PA
+codigo_municipio                 | 6969
+
+
+-- Erro em regime_tributario: UFs estão incorretas para diversos municípios
+--  ABADIA DE GOIAS             | MG
+--  ABADIA DE GOIAS             | MS
+--  ABADIA DE GOIAS             | PE
+--  ABADIA DE GOIAS             | RN
+--  ABADIA DE GOIAS             | SE
+--  ABADIA DE GOIAS             | SP
+--  ABADIA DE GOIAS             | TO
+--  ABADIA DOS DOURADOS         | GO
+--  ABELARDO LUZ                | GO
+--  ABREU E LIMA                | ES
+--  ACAILANDIA                  | SP
+--  ACRELANDIA                  | AL
+--  ACRELANDIA                  | MT
+--  ACRELANDIA                  | PR
+--  ACRELANDIA                  | RO
+--  ACRELANDIA                  | RS
+--  ACRELANDIA                  | SC
+--  ACRELANDIA                  | SP
+--  AFONSO CUNHA                | SP
+--  AGUAS DA PRATA              | MG
+--  ALFENAS                     | SP
+--  ALTA FLORESTA               | RO
+--  ALTA FLORESTA D'OESTE       | DF
+--  ALTA FLORESTA D'OESTE       | ES
+--  ALTA FLORESTA D'OESTE       | GO
+--  ALTA FLORESTA D'OESTE       | PA
+--  ALTA FLORESTA D'OESTE       | RJ
+--  ALTA FLORESTA D'OESTE       | TO
+--  ALTAMIRA                    | SP
+--  ALTAMIRA DO MARANHAO        | SP
+--  ALTO BOA VISTA              | SP
+--  ALTONIA                     | SP
+--  ALVORADA D'OESTE            | SP
+--  AMERICANA                   | BA
+--  AMERICANA                   | MG
+--  AMERICANA                   | PR
+--  AMERICANA                   | RJ
+--  AMPARO DO SERRA             | MG
+--  APARECIDA DE GOIANIA        | CE
+--  ARACAJU                     | BA
+--  ARACAJU                     | PA
+--  ARACATUBA                   | MS
+--  ARACITABA                   | SP
+--  ARAIOSES                    | SP
+--  ARAPIRACA                   | SP
+--  ARAPOEMA                    | SC
+--  ARAPORA                     | GO
+--  ARARANGUA                   | RS
+--  ARARAQUARA                  | RJ
+--  ARATUBA                     | SE
+--  ARAUA                       | SP
+--  ARIQUEMES                   | MA
+--  ARIQUEMES                   | SP
+--  BALIZA                      | SC
+--  BALNEARIO PICARRAS          | SC
+--  BARRACAO                    | SC
+--  BARRA DO BUGRES             | MG
+--  BARRA DO OURO               | SP
+--  BARRETOS                    | MG
+--  BARUERI                     | PE
+--  BARUERI                     | RJ
+--  BARUERI                     | SC
+--  BATATAIS                    | RN
+--  BELEM                       | RO
+--  BELEM DO SAO FRANCISCO      | PE
+--  BELO HORIZONTE              | AM
+--  BELO HORIZONTE              | RJ
+--  BENEVIDES                   | BA
+--  BLUMENAU                    | PR
+--  BLUMENAU                    | SP
+--  BOA NOVA                    | SP
+--  BOA VIAGEM                  | PE
+--  BOA VISTA                   | RS
+--  BODO                        | SP
+--  BOM JARDIM                  | SC
+--  BRACO DO NORTE              | SP
+--  BRASILEIA                   | AL
+--  BRASILEIA                   | AM
+--  BRASILEIA                   | BA
+--  BRASILEIA                   | CE
+--  BRASILEIA                   | DF
+--  BRASILEIA                   | GO
+--  BRASILEIA                   | MG
+--  BRASILEIA                   | PA
+--  BRASILEIA                   | PR
+--  BRASILEIA                   | RJ
+--  BRASILEIA                   | RS
+--  BRASILEIA                   | SC
+--  BRASILEIA                   | SP
+--  BRASILIA                    | GO
+--  BRASILIA                    | RJ
+--  BRASILIA                    | SP
+--  BRASILIA                    | TO
+--  BRASILIA DE MINAS           | DF
+--  BRASIL NOVO                 | SP
+--  BRAZOPOLIS                  | MG
+--  BREJO GRANDE DO ARAGUAIA    | MG
+--  BURITI DOS LOPES            | SP
+--  CACHOEIRA DO SUL            | RN
+--  CAMACAN                     | SP
+--  CAMBE                       | AP
+--  CAMPINAS                    | MG
+--  CAMPO GRANDE                | PR
+--  CAMPO GRANDE                | SP
+--  CANELA                      | SP
+--  CAPIVARI                    | BA
+--  CARAPICUIBA                 | RJ
+--  CARATINGA                   | SP
+--  CASTANHEIRAS                | SP
+--  CATALAO                     | MG
+--  CATALAO                     | SP
+--  CEREJEIRAS                  | PR
+--  CERQUEIRA CESAR             | RJ
+--  CHA GRANDE                  | SP
+--  CHAPECO                     | PR
+--  CHAPECO                     | RS
+--  CHIAPETTA                   | SP
+--  COARACI                     | RJ
+--  COCALZINHO DE GOIAS         | SP
+--  CONDEUBA                    | SP
+--  CORONEL SAPUCAIA            | PR
+--  COUTO MAGALHAES             | TO
+--  CRUZEIRO DO SUL             | SP
+--  CUIABA                      | MS
+--  CURITIBA                    | MT
+--  CURITIBA                    | RS
+--  CURITIBA                    | SC
+--  CURITIBA                    | SP
+--  DARIO MEIRA                 | SP
+--  DIAMANTINO                  | MG
+--  DOM PEDRITO                 | MT
+--  ELDORADO DO CARAJAS         | PA
+--  ENTRE IJUIS                 | SC
+--  ESCADA                      | RJ
+--  ESPERANCA DO SUL            | SP
+--  EUGENIO DE CASTRO           | SP
+--  EUSEBIO                     | SP
+--  EXTERIOR                    | BA
+--  EXTERIOR                    | MG
+--  EXTERIOR                    | MS
+--  EXTERIOR                    | SP
+--  EXTREMA                     | PR
+--  EXTREMOZ                    | ES
+--  FEIRA DE SANTANA            | SC
+--  FERREIRA GOMES              | SP
+--  FIRMINOPOLIS                | MT
+--  FLORESTOPOLIS               | SC
+--  FLORIANO                    | SC
+--  FLORIANOPOLIS               | DF
+--  FLORIDA                     | SC
+--  FORMOSA DO RIO PRETO        | PR
+--  FORTALEZA                   | BA
+--  FORTALEZA DO TABOCAO        | CE
+--  FRAIBURGO                   | SP
+--  FRANCISCO SANTOS            | PR
+--  GLORINHA                    | GO
+--  GOIANA                      | GO
+--  GOIANESIA DO PARA           | GO
+--  GOIANIA                     | DF
+--  GOIANIA                     | PR
+--  GOIANIA                     | TO
+--  GRUPIARA                    | RJ
+--  GUAJARA-MIRIM               | AM
+--  GUAJARA-MIRIM               | SP
+--  GUARAPUAVA                  | RS
+--  GUARULHOS                   | MG
+--  GUARULHOS                   | PR
+--  GUARULHOS                   | SC
+--  GURUPI                      | GO
+--  GURUPI                      | SC
+--  ICATU                       | SP
+--  IGREJINHA                   | RN
+--  IGREJINHA                   | SC
+--  IGREJINHA                   | SP
+--  IGUABA GRANDE               | ES
+--  IGUARACY                    | PE
+--  IGUATU                      | SP
+--  INDAIABIRA                  | SC
+--  IPIRANGA DO PIAUI           | PR
+--  IPIXUNA                     | SP
+--  ITAJA                       | SC
+--  ITAPORA                     | MG
+--  ITAPORANGA                  | PR
+--  IVINHEMA                    | PR
+--  JABOATAO DOS GUARARAPES     | PA
+--  JANDAIA                     | PR
+--  JARDIM DE ANGICOS           | SP
+--  JARU                        | GO
+--  JAU                         | BA
+--  JOACABA                     | PR
+--  JOAQUIM PIRES               | SP
+--  JOINVILLE                   | SP
+--  JOSE RAYDAN                 | SP
+--  JUNDIAI                     | PR
+--  JURUTI                      | SP
+--  LAGEDO DO TABOCAL           | BA
+--  LAGOA DE ITAENGA            | PE
+--  LAGOA DOS PATOS             | DF
+--  LAJEADO GRANDE              | BA
+--  LAJEADO GRANDE              | PR
+--  LAURO DE FREITAS            | GO
+--  LINHARES                    | SC
+--  LUCAS DO RIO VERDE          | PA
+--  LUCIARA                     | SC
+--  MACAE                       | SP
+--  MACEIO                      | PR
+--  MACEIO                      | SC
+--  MAMANGUAPE                  | AL
+--  MANAUS                      | RR
+--  MANAUS                      | SP
+--  MANGUEIRINHA                | DF
+--  MARACANAU                   | SC
+--  MARECHAL THAUMATURGO        | RS
+--  MARINGA                     | AC
+--  MARITUBA                    | MG
+--  MATHIAS LOBATO              | PR
+--  MATO GROSSO                 | MT
+--  MATO LEITAO                 | SP
+--  MAUA DA SERRA               | SP
+--  MIRASSOL D'OESTE            | GO
+--  MONSENHOR TABOSA            | PR
+--  MORADA NOVA DE MINAS        | SP
+--  MOREIRA SALES               | SP
+--  MUITOS CAPOES               | SP
+--  MUNHOZ DE MELLO             | PR
+--  MUQUEM DO SAO FRANCISCO     | BA
+--  NAVIRAI                     | BA
+--  NITEROI                     | SP
+--  NOSSA SENHORA DO LIVRAMENTO | SC
+--  NOVA BRASILANDIA D'OESTE    | PE
+--  NOVA CANDELARIA             | SP
+--  NOVA OLINDA DO NORTE        | PE
+--  NOVA RAMADA                 | SP
+--  NOVO ORIENTE DO PIAUI       | PR
+--  OEIRAS DO PARA              | SP
+--  OLINDA                      | AL
+--  OLINDA                      | AM
+--  OSASCO                      | PA
+--  OSASCO                      | RS
+--  PAICANDU                    | SC
+--  PALMAS                      | SC
+--  PALMEIRAS DE GOIAS          | MT
+--  PARAISO DO TOCANTINS        | RS
+--  PARELHAS                    | SP
+--  PARNAGUA                    | PR
+--  PELOTAS                     | PR
+--  PERUIBE                     | RJ
+--  PETROLINA                   | BA
+--  PIMENTA BUENO               | SP
+--  PINHAIS                     | SC
+--  PIRACICABA                  | BA
+--  PIRIPIRI                    | PR
+--  PLANALTO ALEGRE             | RS
+--  PONTA PORA                  | RS
+--  PORTALEGRE                  | RS
+--  PORTAO                      | BA
+--  PORTO ALEGRE                | RJ
+--  PORTO ALEGRE                | SC
+--  PORTO ALEGRE                | SP
+--  PORTO SEGURO                | SP
+--  PRIMAVERA                   | SP
+--  PRIMAVERA DO LESTE          | MS
+--  QUERENCIA                   | SP
+--  RECIFE                      | CE
+--  RECIFE                      | SE
+--  RECIFE                      | SP
+--  RIACHAO                     | SP
+--  RIO ACIMA                   | RJ
+--  RIO BRANCO                  | GO
+--  RIO CLARO                   | PE
+--  RIO DAS PEDRAS              | RJ
+--  RIO DE JANEIRO              | BA
+--  RIO DE JANEIRO              | DF
+--  RIO DE JANEIRO              | ES
+--  RIO DE JANEIRO              | MG
+--  RIO DE JANEIRO              | SP
+--  RIO DO PRADO                | SP
+--  RORAINOPOLIS                | SP
+--  SAGRADA FAMILIA             | SP
+--  SALVADOR                    | PE
+--  SALVADOR                    | RJ
+--  SALVADOR                    | RS
+--  SANTA CRUZ DO RIO PARDO     | PR
+--  SANTA IZABEL DO PARA        | PA
+--  SANTA IZABEL DO PARA        | SP
+--  SANTA MARIA DO SUACUI       | SP
+--  SANTANA DE PARNAIBA         | MG
+--  SANT'ANA DO LIVRAMENTO      | RS
+--  SANTA ROSA                  | ES
+--  SANTO ANDRE                 | ES
+--  SANTO ANTONIO DA PATRULHA   | SP
+--  SANTOS                      | BA
+--  SAO BERNARDO                | SP
+--  SAO DESIDERIO               | SP
+--  SAO DOMINGOS DAS DORES      | SP
+--  SAO GERALDO DO ARAGUAIA     | SP
+--  SAO GONCALO DO AMARANTE     | RJ
+--  SAO JOAO DA LAGOA           | SP
+--  SAO JOSE                    | SP
+--  SAO JOSE DO BREJO DO CRUZ   | SP
+--  SAO JOSE DOS PINHAIS        | RJ
+--  SAO JOSE DOS PINHAIS        | RS
+--  SAO JOSE DOS PINHAIS        | SC
+--  SAO LOURENCO                | SP
+--  SAO LUIS                    | GO
+--  SAO LUIS                    | MG
+--  SAO LUIS                    | TO
+--  SAO LUIS DO QUITUNDE        | MA
+--  SAO LUIZ                    | MA
+--  SAO MATEUS                  | MG
+--  SAO PATRICIO                | SP
+--  SAO PAULO                   | AM
+--  SAO PAULO                   | AP
+--  SAO PAULO                   | DF
+--  SAO PAULO                   | ES
+--  SAO PAULO                   | GO
+--  SAO PAULO                   | MG
+--  SAO PAULO                   | MS
+--  SAO PAULO                   | PE
+--  SAO PAULO                   | PR
+--  SAO PAULO                   | RJ
+--  SAO PAULO                   | SC
+--  SAO PAULO                   | SE
+--  SAO PAULO DAS MISSOES       | SP
+--  SAO SEBASTIAO DO MARANHAO   | SP
+--  SAO THOME DAS LETRAS        | MG
+--  SAPUCAIA                    | RS
+--  SERRA                       | MG
+--  SERRA                       | PE
+--  SERRA                       | PR
+--  SERRA                       | RJ
+--  SERRA                       | SP
+--  SERRA DOS AIMORES           | SP
+--  SILVEIRANIA                 | SP
+--  SINOP                       | BA
+--  SOBRADINHO                  | SP
+--  TAGUATINGA                  | RJ
+--  TALISMA                     | SP
+--  TANGUA                      | SP
+--  TAQUARA                     | PA
+--  TIETE                       | MG
+--  TOCANTINS                   | TO
+--  TUPASSI                     | GO
+--  UMUARAMA                    | MG
+--  UMUARAMA                    | MS
+--  URUANA DE MINAS             | PR
+--  URUTAI                      | RJ
+--  VALINHOS                    | PR
+--  VALPARAISO                  | DF
+--  VALPARAISO                  | GO
+--  VARGEM                      | GO
+--  VARZEA BRANCA               | MT
+--  VILA NOVA DO PIAUI          | SP
+--  VIRGEM DA LAPA              | SP
+--  VITORIA                     | RJ
+--  VITORIA                     | SP
+--  VITORIA DO XINGU            | ES
+--  VOLTA GRANDE                | ES
+--  VOTUPORANGA                 | MG
+--  WENCESLAU BRAZ              | RS
+--  WENCESLAU BRAZ              | SC
+--  XAMBIOA                     | PR
+--  XAMBIOA                     | SP
+--  ZABELE                      | SP
+--  ZORTEA                      | SP
+
+
+-- TODO: comparar tabela de municípios do IBGE com municipio_uf (usando slug)
