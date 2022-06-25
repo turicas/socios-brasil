@@ -8,15 +8,15 @@ CREATE TABLE socio_uuid AS
     END AS socio_uuid,
     company_uuid(cnpj_raiz) AS empresa_uuid,
     cnpj_raiz,
-    codigo_identificador,
+    codigo_identificador::smallint AS codigo_identificador,
     UPPER(REPLACE(slug(nome), '-', ' ')) AS nome,
     cpf_cnpj,
-    codigo_qualificacao,
+    codigo_qualificacao::smallint AS codigo_qualificacao,
     CASE
       WHEN data_entrada_sociedade IN ('00000000', '0') THEN NULL
       ELSE TO_DATE(data_entrada_sociedade, 'YYYYMMDD')
     END AS data_entrada_sociedade,
-    codigo_pais,
+    codigo_pais::smallint AS codigo_pais,
     CASE
       WHEN representante IS NULL THEN NULL
       ELSE representante_cpf_cnpj
@@ -24,7 +24,7 @@ CREATE TABLE socio_uuid AS
     representante,
     CASE
       WHEN representante IS NULL THEN NULL
-      ELSE representante_codigo_qualificacao
+      ELSE representante_codigo_qualificacao::smallint
     END AS representante_codigo_qualificacao,
     CASE
       WHEN representante IS NULL THEN NULL
@@ -35,7 +35,7 @@ CREATE TABLE socio_uuid AS
     END AS representante_uuid,
     CASE
       WHEN codigo_faixa_etaria = 0 THEN NULL
-      ELSE codigo_faixa_etaria
+      ELSE codigo_faixa_etaria::smallint
     END AS codigo_faixa_etaria
   FROM socio;
 
