@@ -223,7 +223,7 @@ WHERE uf = 'BR';
 -- Erro em estabelecimento: código do município inválido para UF
 SELECT cnpj_raiz, cnpj_ordem, cnpj_dv, cep, uf, codigo_municipio
 FROM estabelecimento
-WHERE codigo_municipio = '6969' AND uf <> 'SP';
+WHERE codigo_municipio = 6969 AND uf <> 'SP';
 -[ RECORD 1 ]--------------------+-------------------------
 cnpj_raiz                        | 39868640
 cnpj_ordem                       | 0001

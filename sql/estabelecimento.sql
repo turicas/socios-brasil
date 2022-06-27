@@ -38,10 +38,10 @@ CREATE TABLE estabelecimento_uuid AS
       WHEN uf = 'BR' THEN 'RJ'
       ELSE uf
     END AS uf,
-    CASE -- Conserta erro de preenchimento cnpj_raiz = 39868640
-      WHEN codigo_municipio = '6969' AND uf = 'PA' THEN 529
-      ELSE codigo_municipio::smallint
-    END AS codigo_municipio,
+    (CASE -- Conserta erro de preenchimento cnpj_raiz = 39868640
+      WHEN codigo_municipio = 6969 AND uf = 'PA' THEN 529
+      ELSE codigo_municipio
+    END)::smallint AS codigo_municipio,
     ddd_1, -- TODO: normalizar/limpar?
     telefone_1, -- TODO: normalizar/limpar?
     ddd_2, -- TODO: normalizar/limpar?
