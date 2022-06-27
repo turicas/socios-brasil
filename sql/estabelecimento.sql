@@ -10,17 +10,11 @@ CREATE TABLE estabelecimento_uuid AS
     END AS matriz,
     nome_fantasia,
     codigo_situacao_cadastral::smallint AS codigo_situacao_cadastral,
-    CASE
-      WHEN data_situacao_cadastral IN ('00000000', '0') THEN NULL
-      ELSE TO_DATE(data_situacao_cadastral, 'YYYYMMDD')
-    END AS data_situacao_cadastral,
+    parse_date(data_situacao_cadastral) AS data_situacao_cadastral,
     codigo_motivo_situacao_cadastral::smallint AS codigo_motivo_situacao_cadastral,
     TRIM(cidade_exterior) AS cidade_exterior,
     codigo_pais::smallint AS codigo_pais,
-    CASE
-      WHEN data_inicio_atividade IN ('00000000', '0') THEN NULL
-      ELSE TO_DATE(data_inicio_atividade, 'YYYYMMDD')
-    END AS data_inicio_atividade,
+    parse_date(data_inicio_atividade) AS data_inicio_atividade,
     cnae_principal,
     STRING_TO_ARRAY(cnae_secundaria, ',') AS cnae_secundaria,
     TRIM(tipo_logradouro) AS tipo_logradouro, -- TODO: normalizar?
@@ -50,10 +44,7 @@ CREATE TABLE estabelecimento_uuid AS
     fax, -- TODO: normalizar/limpar?
     correio_eletronico, -- TODO: normalizar/limpar?
     situacao_especial, -- TODO: normalizar/limpar?
-    CASE
-      WHEN data_situacao_especial IN ('00000000', '0') THEN NULL
-      ELSE TO_DATE(data_situacao_especial, 'YYYYMMDD')
-    END AS data_situacao_especial
+    parse_date(data_situacao_especial) AS data_situacao_especial
   FROM estabelecimento;
 
 -- TODO: normalizar nomes de colunas

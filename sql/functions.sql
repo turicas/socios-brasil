@@ -1,3 +1,15 @@
+-- Funções de conversão de strings
+CREATE OR REPLACE FUNCTION parse_date(value TEXT)
+RETURNS DATE AS $$
+BEGIN
+  RETURN CASE
+    WHEN value NOT IN ('00000000', '0') THEN TO_DATE(value, 'YYYYMMDD')
+    ELSE NULL
+  END;
+END; $$ LANGUAGE 'plpgsql' IMMUTABLE;
+
+
+-- Mapeamentos
 CREATE OR REPLACE FUNCTION sigla_uf(value TEXT)
 RETURNS TEXT AS $$
 BEGIN

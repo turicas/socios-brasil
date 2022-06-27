@@ -45,3 +45,9 @@ RETURNS UUID AS $$
 BEGIN
   RETURN uuid_generate_v5(uuid_ns_url(), 'https://id.brasil.io/company/v1/' || company_internal_id(cnpj) || '/');
 END; $$ LANGUAGE 'plpgsql' IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION candidacy_uuid(ano smallint, numero_sequencial text)
+RETURNS UUID AS $$
+BEGIN
+  RETURN uuid_generate_v5(uuid_ns_url(), 'https://id.brasil.io/candidacy/v1/' || ano::text || '-' || regexp_replace(numero_sequencial, '[^0-9]', '', 'g') || '/');
+END; $$ LANGUAGE 'plpgsql' IMMUTABLE;
