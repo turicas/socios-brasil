@@ -5,7 +5,7 @@ import zipfile
 from functools import cached_property
 from pathlib import Path
 
-from rows.plugins.postgresql import PostgresCopy
+from rows.plugins.postgresql import PostgresCopy, pg_execute_psql
 from rows.utils import NotNullWrapper, ProgressBar, load_schema, subclasses
 
 SCHEMA_PATH = Path(__file__).parent / "headers" / "novos"
@@ -36,14 +36,17 @@ class TableConfig:
         zip_path = Path(zip_path)
         return sorted(zip_path.glob(self.filename_pattern))
 
-    def load(self, zip_path, database_url, unlogged=False, access_method=None):
+    def load(self, zip_path, database_url, unlogged=False, access_method=None, drop=False):
         """Load data into PostgreSQL database"""
 
-        progress_bar = ProgressBar(
-            pre_prefix=f"Importing {self.name} (calculating size)",
-            prefix="",
-            unit="bytes",
-        )
+        desc_import = f"Importing {self.name} (calculating size)"
+        desc_drop = f"Dropping {self.name}"
+
+        progress_bar = ProgressBar(pre_prefix=desc_drop if drop else desc_import, prefix="", unit="bytes")
+
+        if drop:
+            pg_execute_psql(database_url, f'DROP TABLE IF EXISTS "{self.name}"')
+            progress_bar.prefix = progress_bar.description = desc_import
 
         # First, select all zip files and inner files to load
         filenames = self.filenames(zip_path)
@@ -63,7 +66,7 @@ class TableConfig:
             uncompressed_size += sum(file_info.file_size for file_info in files_infos)
 
         pgcopy = PostgresCopy(database_url)
-        progress_bar.prefix = progress_bar.description = "Importing {self.name} (ZIP 0/{len(files_to_extract)})"
+        progress_bar.prefix = progress_bar.description = f"Importing {self.name} (ZIP 0/{len(files_to_extract)})"
         progress_bar.total = uncompressed_size
         rows_imported = 0
         for counter, (zf, files_infos) in enumerate(files_to_extract, start=1):
@@ -173,6 +176,7 @@ if __name__ == "__main__":
 
     table_classes = TableConfig.subclasses()
     parser = argparse.ArgumentParser()
+    parser.add_argument("--drop-if-exists", action="store_true", help="Drop table (if exists) before creating/importing data")
     parser.add_argument("--unlogged", action="store_true")
     parser.add_argument("--access-method", choices=["heap", "columnar"], default="heap")
     parser.add_argument("--database-url")
@@ -201,4 +205,5 @@ if __name__ == "__main__":
             database_url,
             unlogged=args.unlogged,
             access_method=args.access_method,
+            drop=args.drop_if_exists,
         )
