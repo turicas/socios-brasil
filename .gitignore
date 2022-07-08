@@ -11,7 +11,8 @@
 .tox
 MANIFEST
 build/*
-dist/*
-download.sh
 data/*
+dist/*
+docker/data
+download.sh
 reg_settings.py
