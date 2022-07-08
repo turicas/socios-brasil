@@ -1,7 +1,7 @@
 import datetime
 import re
 from pathlib import Path
-from urllib.parse import urljoin
+from urllib.parse import urljoin, unquote
 
 import requests
 from lxml.html import document_fromstring
@@ -78,9 +78,9 @@ def main():
     if args.versao == "atual":
         receita = ReceitaHTMLParser(mirror=args.mirror)
         extraction_date = receita.extraction_date
-        print(f"Data da última extração: {extraction_date}")
-
         date = extraction_date.strftime("%Y-%m-%d")
+        print(f"Data da última extração: {date}")
+
         index_filename = Path(args.path_pattern.format(date=date, filename="index.html"))
         if not index_filename.parent.exists():
             index_filename.parent.mkdir(parents=True)
@@ -93,7 +93,7 @@ def main():
             [
                 Download(
                     url=link,
-                    filename=args.path_pattern.format(date=date, filename=Path(link).name),
+                    filename=args.path_pattern.format(date=date, filename=Path(unquote(link)).name),
                 )
                 for link in receita.links
             ]
