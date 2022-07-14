@@ -14,7 +14,7 @@ SCHEMA_PATH = Path(__file__).parent / "headers" / "novos"
 class TableConfig:
     """Base class to handle table configurations during import"""
 
-    filename_pattern: str  # Glob pattern for ZIP filename
+    filename_patterns: str  # Glob pattern for ZIP filename
     schema_filename: str  # Schema filename to use when importing
     has_header: bool  # Does the CSV file's first line is the header?
     name: str  # Table name to be imported
@@ -34,7 +34,10 @@ class TableConfig:
     def filenames(self, zip_path):
         """List of zip files which matches this table's ZIP archive pattern"""
         zip_path = Path(zip_path)
-        return sorted(zip_path.glob(self.filename_pattern))
+        all_filenames = []
+        for filename_pattern in self.filename_patterns:
+            all_filenames.extend(zip_path.glob(filename_pattern))
+        return sorted(set(all_filenames))
 
     def load(self, zip_path, database_url, unlogged=False, access_method=None, drop=False):
         """Load data into PostgreSQL database"""
@@ -91,70 +94,70 @@ class TableConfig:
 
 
 class Empresa(TableConfig):
-    filename_pattern = "*EMPRECSV.zip"
+    filename_patterns = ("*EMPRECSV.zip", "Empresas*.zip")
     has_header = False
     name = "empresa"
     schema_filename = "empresa.csv"
 
 
 class Estabelecimento(TableConfig):
-    filename_pattern = "*ESTABELE.zip"
+    filename_patterns = ("*ESTABELE.zip", "Estabelecimentos*.zip")
     has_header = False
     name = "estabelecimento"
     schema_filename = "estabelecimento.csv"
 
 
 class Simples(TableConfig):
-    filename_pattern = "*SIMPLES.CSV*zip"
+    filename_patterns = ("*SIMPLES.CSV*zip", "Simples.zip")
     has_header = False
     name = "simples"
     schema_filename = "simples.csv"
 
 
 class Socio(TableConfig):
-    filename_pattern = "*SOCIOCSV.zip"
+    filename_patterns = ("*SOCIOCSV.zip", "Socios*.zip")
     has_header = False
     name = "socio"
     schema_filename = "socio.csv"
 
 
 class MotivoSituacaoCadastral(TableConfig):
-    filename_pattern = "*MOTICSV.zip"
+    filename_patterns = ("*MOTICSV.zip", "Motivos.zip")
     has_header = False
     name = "motivo_situacao_cadastral"
     schema_filename = "mapeamento.csv"
 
 
 class Cnae(TableConfig):
-    filename_pattern = "*CNAECSV.zip"
+    filename_patterns = ("*CNAECSV.zip", "Cnaes.zip")
     has_header = False
     name = "cnae"
     schema_filename = "mapeamento.csv"
 
 
 class NaturezaJuridica(TableConfig):
-    filename_pattern = "*NATJUCSV.zip"
+    filename_patterns = ("*NATJUCSV.zip", "Naturezas.zip")
     has_header = False
     name = "natureza_juridica"
     schema_filename = "mapeamento.csv"
 
 
 class Municipio(TableConfig):
-    filename_pattern = "*MUNICCSV.zip"
+    filename_patterns = ("*MUNICCSV.zip", "Municipios.zip")
     has_header = False
     name = "municipio"
     schema_filename = "mapeamento.csv"
 
 
 class Pais(TableConfig):
-    filename_pattern = "*PAISCSV.zip"
+    filename_patterns = ("*PAISCSV.zip", "Paises.zip")
     has_header = False
     name = "pais"
     schema_filename = "mapeamento.csv"
 
 
 class QualificacaoSocio(TableConfig):
-    filename_pattern = "*QUALSCSV.zip"
+    filename_patterns = ("*QUALSCSV.zip", "Qualificacoes.zip")
     has_header = False
     name = "qualificacao_socio"
     schema_filename = "mapeamento.csv"
@@ -162,7 +165,7 @@ class QualificacaoSocio(TableConfig):
 
 class RegimeTributario(TableConfig):
     dialect = "excel"
-    filename_pattern = "Dados Abertos Sítio RFB*.zip"
+    filename_patterns = ("Dados Abertos Sítio RFB*.zip", )
     has_header = True
     inner_filename_pattern = "*.csv"
     name = "regime_tributario"
