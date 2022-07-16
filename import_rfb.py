@@ -83,7 +83,7 @@ class TableConfig:
                     encoding=self.encoding,
                     dialect=self.dialect,
                     schema=self.schema,
-                    skip_header=not self.has_header,
+                    has_header=self.has_header,
                     unlogged=unlogged,
                     access_method=access_method,
                     callback=progress_bar.update,
