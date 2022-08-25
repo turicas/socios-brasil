@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS simples_uuid;
-CREATE TABLE simples_uuid AS
+CREATE TABLE simples_uuid USING COLUMNAR AS
   SELECT
     company_uuid(cnpj_raiz) AS empresa_uuid,
     cnpj_raiz,

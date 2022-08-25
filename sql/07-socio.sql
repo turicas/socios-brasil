@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS socio_uuid;
-CREATE TABLE socio_uuid AS
+CREATE TABLE socio_uuid USING COLUMNAR AS
   SELECT
     CASE
       WHEN codigo_identificador = 1 THEN company_uuid(cpf_cnpj)

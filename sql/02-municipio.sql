@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS municipio_uf;
-CREATE TABLE municipio_uf AS
+CREATE TABLE municipio_uf USING COLUMNAR AS
   WITH temp AS (
     SELECT DISTINCT
       (CASE -- Conserta erro de preenchimento cnpj_raiz = 39868640

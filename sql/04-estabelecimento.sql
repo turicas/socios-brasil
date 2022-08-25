@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS estabelecimento_uuid;
-CREATE TABLE estabelecimento_uuid AS
+CREATE TABLE estabelecimento_uuid USING COLUMNAR AS
   SELECT
     company_uuid(cnpj_raiz) AS empresa_uuid,
     cnpj_raiz || cnpj_ordem || cnpj_dv AS cnpj,

@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS regime_tributario_uuid;
-CREATE TABLE regime_tributario_uuid AS
+CREATE TABLE regime_tributario_uuid USING COLUMNAR AS
   SELECT
     company_uuid(r.cnpj) AS empresa_uuid,
     r.ano::smallint AS ano,
