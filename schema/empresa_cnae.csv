@@ -1,0 +1,13 @@
+field_name,field_type
+cnpj,text
+razao_social,text
+nome_fantasia,text
+cnae_principal,integer
+cnae_secundaria,text
+municipio,text
+codigo_municipio,integer
+uf,text
+data_situacao_cadastral,date
+codigo_situacao_cadastral,integer
+codigo_motivo_situacao_cadastral,integer
+data_inicio_atividade,date
