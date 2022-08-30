@@ -6,7 +6,7 @@ CREATE TABLE socio USING COLUMNAR AS
       WHEN codigo_identificador = 2 THEN person_uuid(cpf_cnpj, nome)
       ELSE NULL
     END AS socio_uuid,
-    company_uuid(cnpj_raiz) AS empresa_uuid,
+    company_uuid(cnpj_raiz || '000100') AS empresa_uuid,
     cnpj_raiz,
     codigo_identificador::smallint AS codigo_identificador,
     UPPER(REPLACE(slug(nome), '-', ' ')) AS nome,

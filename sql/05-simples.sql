@@ -1,7 +1,7 @@
 DROP TABLE IF EXISTS simples;
 CREATE TABLE simples USING COLUMNAR AS
   SELECT
-    company_uuid(cnpj_raiz) AS empresa_uuid,
+    company_uuid(cnpj_raiz || '000100') AS empresa_uuid,
     cnpj_raiz,
     CASE
       WHEN opcao_simples = 'S' THEN TRUE

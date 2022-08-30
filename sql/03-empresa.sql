@@ -12,7 +12,7 @@ CREATE TABLE empresa USING COLUMNAR AS
     m.codigo AS ente_responsavel_codigo_municipio
   FROM (
     SELECT
-      company_uuid(cnpj_raiz) AS "uuid",
+      company_uuid(cnpj_raiz || '000100') AS "uuid",
       cnpj_raiz,
       razao_social,
       codigo_natureza_juridica::smallint AS codigo_natureza_juridica,

@@ -2,7 +2,7 @@ services:
   db:
     image: citusdata/citus:10.2-pg14
     env_file: .env
-    shm_size: 1g
+    shm_size: 4g
     ports:
       - 5432:5432
     volumes:

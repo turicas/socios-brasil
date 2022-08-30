@@ -1,9 +1,9 @@
 DROP TABLE IF EXISTS estabelecimento;
 CREATE TABLE estabelecimento USING COLUMNAR AS
   SELECT
-    company_branch_uuid(cnpj_raiz || cnpj_ordem || cnpj_dv) AS "uuid",
-    company_uuid(cnpj_raiz) AS empresa_uuid,
-    cnpj_raiz || cnpj_ordem || cnpj_dv AS cnpj,
+    company_branch_uuid(RIGHT('00000000000000' || cnpj_raiz || cnpj_ordem || cnpj_dv, 14)) AS "uuid",
+    company_uuid(RIGHT('00000000000000' || cnpj_raiz || cnpj_ordem || cnpj_dv, 14)) AS empresa_uuid,
+    RIGHT('00000000000000' || cnpj_raiz || cnpj_ordem || cnpj_dv, 14) AS cnpj,
     CASE
       WHEN matriz_filial = 1 THEN TRUE
       WHEN matriz_filial = 2 THEN FALSE
@@ -37,13 +37,13 @@ CREATE TABLE estabelecimento USING COLUMNAR AS
       WHEN codigo_municipio = 6969 AND uf = 'PA' THEN 529
       ELSE codigo_municipio
     END)::smallint AS codigo_municipio,
-    ddd_1, -- TODO: normalizar/limpar?
-    telefone_1, -- TODO: normalizar/limpar?
-    ddd_2, -- TODO: normalizar/limpar?
-    telefone_2, -- TODO: normalizar/limpar?
-    ddd_do_fax, -- TODO: normalizar/limpar?
-    fax, -- TODO: normalizar/limpar?
-    correio_eletronico, -- TODO: normalizar/limpar?
+    TRIM(ddd_1) AS ddd_1, -- TODO: normalizar/limpar?
+    TRIM(telefone_1) AS telefone_1, -- TODO: normalizar/limpar?
+    TRIM(ddd_2) AS ddd_2, -- TODO: normalizar/limpar?
+    TRIM(telefone_2) AS telefone_2, -- TODO: normalizar/limpar?
+    TRIM(ddd_do_fax) AS ddd_fax, -- TODO: normalizar/limpar?
+    TRIM(fax) AS fax, -- TODO: normalizar/limpar?
+    TRIM(correio_eletronico) AS email, -- TODO: normalizar/limpar?
     situacao_especial, -- TODO: normalizar/limpar?
     parse_date(data_situacao_especial) AS data_situacao_especial
   FROM estabelecimento_orig;
