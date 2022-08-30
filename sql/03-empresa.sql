@@ -1,7 +1,7 @@
-DROP TABLE IF EXISTS empresa_uuid;
-CREATE TABLE empresa_uuid USING COLUMNAR AS
+DROP TABLE IF EXISTS empresa;
+CREATE TABLE empresa USING COLUMNAR AS
   SELECT
-    e.empresa_uuid,
+    e."uuid",
     e.cnpj_raiz,
     e.razao_social,
     e.codigo_natureza_juridica,
@@ -12,7 +12,7 @@ CREATE TABLE empresa_uuid USING COLUMNAR AS
     m.codigo AS ente_responsavel_codigo_municipio
   FROM (
     SELECT
-      company_uuid(cnpj_raiz) AS empresa_uuid,
+      company_uuid(cnpj_raiz) AS "uuid",
       cnpj_raiz,
       razao_social,
       codigo_natureza_juridica::smallint AS codigo_natureza_juridica,
@@ -31,7 +31,7 @@ CREATE TABLE empresa_uuid USING COLUMNAR AS
         WHEN ente_federativo LIKE '% - %' THEN REGEXP_REPLACE(ente_federativo, ' - .*', '')
         ELSE ente_federativo -- não deveria acontecer
       END AS ente_responsavel_municipio
-    FROM empresa
+    FROM empresa_orig
     WHERE
       razao_social IS NOT NULL
       OR codigo_natureza_juridica = 0
@@ -39,4 +39,4 @@ CREATE TABLE empresa_uuid USING COLUMNAR AS
     LEFT JOIN municipio_uf AS m
       ON e.ente_responsavel_uf = m.uf AND e.ente_responsavel_municipio = m.nome;
 
-CREATE INDEX idx_empresa_uuid_id ON empresa_uuid (empresa_uuid);
+CREATE INDEX idx_empresa_uuid ON empresa ("uuid");

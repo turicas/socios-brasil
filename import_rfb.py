@@ -96,28 +96,28 @@ class TableConfig:
 class Empresa(TableConfig):
     filename_patterns = ("*EMPRECSV.zip", "Empresas*.zip")
     has_header = False
-    name = "empresa"
+    name = "empresa_orig"
     schema_filename = "empresa.csv"
 
 
 class Estabelecimento(TableConfig):
     filename_patterns = ("*ESTABELE.zip", "Estabelecimentos*.zip")
     has_header = False
-    name = "estabelecimento"
+    name = "estabelecimento_orig"
     schema_filename = "estabelecimento.csv"
 
 
 class Simples(TableConfig):
     filename_patterns = ("*SIMPLES.CSV*zip", "Simples.zip")
     has_header = False
-    name = "simples"
+    name = "simples_orig"
     schema_filename = "simples.csv"
 
 
 class Socio(TableConfig):
     filename_patterns = ("*SOCIOCSV.zip", "Socios*.zip")
     has_header = False
-    name = "socio"
+    name = "socio_orig"
     schema_filename = "socio.csv"
 
 
@@ -168,7 +168,7 @@ class RegimeTributario(TableConfig):
     filename_patterns = ("Dados Abertos Sítio RFB*.zip", )
     has_header = True
     inner_filename_pattern = "*.csv"
-    name = "regime_tributario"
+    name = "regime_tributario_orig"
     schema_filename = "regime_tributario.csv"
 
 

@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS simples_uuid;
-CREATE TABLE simples_uuid USING COLUMNAR AS
+DROP TABLE IF EXISTS simples;
+CREATE TABLE simples USING COLUMNAR AS
   SELECT
     company_uuid(cnpj_raiz) AS empresa_uuid,
     cnpj_raiz,
@@ -29,9 +29,9 @@ CREATE TABLE simples_uuid USING COLUMNAR AS
       WHEN data_exclusao_mei IN ('00000000', '0') THEN NULL
       ELSE TO_DATE(data_exclusao_mei, 'YYYYMMDD')
     END AS data_exclusao_mei
-  FROM simples;
+  FROM simples_orig;
 
-CREATE INDEX ON simples_uuid (empresa_uuid);
+CREATE INDEX ON simples (empresa_uuid);
 CREATE INDEX ON empresa (cnpj_raiz);
 
 -- TODO: renomear colunas

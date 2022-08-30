@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS socio_uuid;
-CREATE TABLE socio_uuid USING COLUMNAR AS
+DROP TABLE IF EXISTS socio;
+CREATE TABLE socio USING COLUMNAR AS
   SELECT
     CASE
       WHEN codigo_identificador = 1 THEN company_uuid(cpf_cnpj)
@@ -37,11 +37,11 @@ CREATE TABLE socio_uuid USING COLUMNAR AS
       WHEN codigo_faixa_etaria = 0 THEN NULL
       ELSE codigo_faixa_etaria::smallint
     END AS codigo_faixa_etaria
-  FROM socio;
+  FROM socio_orig;
 
 -- TODO: renomear colunas
 -- TODO: separar índices
 
-CREATE INDEX ON socio_uuid (socio_uuid, empresa_uuid);
-CREATE INDEX ON socio_uuid (cpf_cnpj);
-CREATE INDEX ON socio_uuid (cnpj_raiz);
+CREATE INDEX ON socio (socio_uuid, empresa_uuid);
+CREATE INDEX ON socio (cpf_cnpj);
+CREATE INDEX ON socio (cnpj_raiz);

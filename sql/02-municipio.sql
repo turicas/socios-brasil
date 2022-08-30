@@ -10,7 +10,7 @@ CREATE TABLE municipio_uf USING COLUMNAR AS
         WHEN uf = 'BR' THEN 'RJ'
         ELSE uf
       END AS uf
-    FROM estabelecimento
+    FROM estabelecimento_orig
   )
   SELECT
     t.codigo::smallint AS codigo,

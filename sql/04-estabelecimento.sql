@@ -1,6 +1,7 @@
-DROP TABLE IF EXISTS estabelecimento_uuid;
-CREATE TABLE estabelecimento_uuid USING COLUMNAR AS
+DROP TABLE IF EXISTS estabelecimento;
+CREATE TABLE estabelecimento USING COLUMNAR AS
   SELECT
+    company_branch_uuid(cnpj_raiz || cnpj_ordem || cnpj_dv) AS "uuid",
     company_uuid(cnpj_raiz) AS empresa_uuid,
     cnpj_raiz || cnpj_ordem || cnpj_dv AS cnpj,
     CASE
@@ -45,9 +46,10 @@ CREATE TABLE estabelecimento_uuid USING COLUMNAR AS
     correio_eletronico, -- TODO: normalizar/limpar?
     situacao_especial, -- TODO: normalizar/limpar?
     parse_date(data_situacao_especial) AS data_situacao_especial
-  FROM estabelecimento;
+  FROM estabelecimento_orig;
 
 -- TODO: normalizar nomes de colunas
 
-CREATE INDEX idx_estabelecimento_id ON estabelecimento_uuid (empresa_uuid);
-CREATE INDEX idx_estabelecimento_cnpj ON estabelecimento_uuid (cnpj);
+CREATE INDEX idx_estabelecimento_uuid ON estabelecimento ("uuid");
+CREATE INDEX idx_estabelecimento_empresa_uuid ON estabelecimento (empresa_uuid);
+CREATE INDEX idx_estabelecimento_cnpj ON estabelecimento (cnpj);
