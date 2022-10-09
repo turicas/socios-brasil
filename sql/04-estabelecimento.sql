@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS estabelecimento;
-CREATE TABLE estabelecimento USING COLUMNAR AS
+CREATE TABLE estabelecimento AS
   SELECT
     company_branch_uuid(RIGHT('00000000000000' || cnpj_raiz || cnpj_ordem || cnpj_dv, 14)) AS "uuid",
     company_uuid(RIGHT('00000000000000' || cnpj_raiz || cnpj_ordem || cnpj_dv, 14)) AS empresa_uuid,

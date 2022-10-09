@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS empresa;
-CREATE TABLE empresa USING COLUMNAR AS
+CREATE TABLE empresa AS
   SELECT
     e."uuid",
     e.cnpj_raiz,
