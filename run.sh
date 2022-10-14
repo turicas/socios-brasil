@@ -16,8 +16,8 @@ python download.py atual
 
 echo "Loading downloaded data into PostgreSQL..."
 python import_rfb.py \
-	--access-method=columnar \
 	--database-url=$DATABASE_URL \
+	--drop-if-exists \
 	"data/download/$(ls --color=no -tr data/download | tail -1)" \
 	all
 
