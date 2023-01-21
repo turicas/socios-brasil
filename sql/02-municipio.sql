@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS municipio_uf;
+DROP TABLE IF EXISTS municipio_uf CASCADE;
 CREATE TABLE municipio_uf AS
   WITH temp AS (
     SELECT DISTINCT

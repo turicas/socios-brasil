@@ -1,4 +1,5 @@
 import datetime
+import json
 import re
 from pathlib import Path
 from urllib.parse import urljoin, unquote
@@ -10,58 +11,24 @@ from rows.utils.download import Download, Downloader
 REGEXP_DATE = re.compile("_([0-9]{4})([0-9]{2})([0-9]{2})[_.]")
 
 
-def download_history(year, path_pattern="data/download/{date}/{filename}", downloader="aria2c"):
-    url = f"http://200.152.38.155/CNPJ_historico/{year}/"
-    response = requests.get(url)
-    tree = document_fromstring(response.text)
-    subclasses = Downloader.subclasses()
-    downloader = subclasses[downloader]()
-    for filename in tree.xpath("//a/@href"):
-        result = REGEXP_DATE.findall(filename)
-        if not result:
-            continue
-        year, month, day = result[0]
-        date = f"{year}-{month}-{day}"
-        downloader.add(
-            Download(
-                url=urljoin(url, filename),
-                filename=Path(path_pattern.format(date=date, filename=filename)).absolute(),
-            )
-        )
-    downloader.run()
-
-
 class ReceitaHTMLParser:
-    url = (
-        "https://www.gov.br/receitafederal/pt-br/assuntos/orientacao-tributaria/cadastros/consultas/dados-publicos-cnpj"
-    )
+    url = "https://dados.gov.br/api/publico/conjuntos-dados/cadastro-nacional-da-pessoa-juridica-cnpj"
 
     def __init__(self, mirror=False):
         response = requests.get(self.url)
-        self.html = response.text
-        self.tree = document_fromstring(self.html)
+        data = response.json()
+        self.json = response.json()
         self.mirror = mirror
-        self._extraction_date = None
+        resource = self.json["resources"][0]
+        self._extraction_date = datetime.datetime.fromisoformat(resource["created"]).date()
 
     @property
     def links(self):
-        yielded = set()
-        for link in self.tree.xpath("//a[contains(@href, '.zip')]/@href"):
-            link = link.replace("http://http//", "http://")
+        for resource in self.json["resources"]:
+            link = resource["url"]
             if self.mirror:
-                link = f"https://data.brasil.io/mirror/socios-brasil/{self.extraction_date}/" + Path(link).name
-            if link not in yielded:
-                yield link
-                yielded.add(link)
-
-    @property
-    def extraction_date(self):
-        if self._extraction_date is None:
-            last_extraction = self.tree.xpath("//*[contains(text(), 'Data da última extração:')]//text()")[0]
-            result = re.findall("([0-9]{1,2})/([0-9]{1,2})/([0-9]{2,4})", last_extraction)
-            date_parts = [int(part) for part in reversed(result[0])]
-            self._extraction_date = datetime.date(*date_parts)
-        return self._extraction_date
+                link = f"https://data.brasil.io/mirror/socios-brasil/{self._extraction_date}/" + Path(link).name
+            yield link
 
 
 def main():
@@ -72,41 +39,31 @@ def main():
     parser.add_argument("--path-pattern", default="data/download/{date}/{filename}")
     parser.add_argument("--downloader", choices=list(subclasses.keys()), default="aria2c")
     parser.add_argument("--mirror", action="store_true")
-    parser.add_argument("versao", choices=("historico-2021", "historico-2022", "atual"))
     args = parser.parse_args()
 
-    if args.versao == "atual":
-        receita = ReceitaHTMLParser(mirror=args.mirror)
-        extraction_date = receita.extraction_date
-        date = extraction_date.strftime("%Y-%m-%d")
-        print(f"Data da última extração: {date}")
+    receita = ReceitaHTMLParser(mirror=args.mirror)
+    extraction_date = receita.extraction_date
+    date = extraction_date.strftime("%Y-%m-%d")
+    print(f"Data da última extração: {date}")
 
-        index_filename = Path(args.path_pattern.format(date=date, filename="index.html"))
-        if not index_filename.parent.exists():
-            index_filename.parent.mkdir(parents=True)
-        with index_filename.open(mode="w") as fobj:
-            fobj.write(receita.html)
-        print(f"HTML salvo em {index_filename}")
+    json_filename = Path(args.path_pattern.format(date=date, filename="resources.json"))
+    if not json_filename.parent.exists():
+        json_filename.parent.mkdir(parents=True)
+    with json_filename.open(mode="w") as fobj:
+        json.dump(receita.json, fobj)
+    print(f"JSON salvo em {json_filename}")
 
-        downloader = subclasses[args.downloader]()
-        downloader.add_many(
-            [
-                Download(
-                    url=link,
-                    filename=args.path_pattern.format(date=date, filename=Path(unquote(link)).name),
-                )
-                for link in receita.links
-            ]
-        )
-        downloader.run()
-
-    elif args.versao.startswith("historico-"):
-        year = args.versao.replace("historico-", "")
-        download_history(
-            year,
-            path_pattern=args.path_pattern,
-            downloader=args.downloader,
-        )
+    downloader = subclasses[args.downloader]()
+    downloader.add_many(
+        [
+            Download(
+                url=link,
+                filename=args.path_pattern.format(date=date, filename=Path(unquote(link)).name),
+            )
+            for link in receita.links
+        ]
+    )
+    downloader.run()
 
 
 if __name__ == "__main__":

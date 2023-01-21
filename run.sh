@@ -12,7 +12,7 @@ if [[ ! "$DATABASE_URL" ]]; then
 fi
 
 echo "Downloading..."
-python download.py atual
+python download.py
 
 echo "Loading downloaded data into PostgreSQL..."
 python import_rfb.py \
