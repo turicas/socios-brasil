@@ -1,6 +1,6 @@
 services:
   db:
-    image: citusdata/citus:10.2-pg14
+    image: postgres:14-bullseye
     env_file: .env
     shm_size: 4g
     ports:

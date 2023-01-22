@@ -164,6 +164,9 @@ class QualificacaoSocio(TableConfig):
 
 
 class RegimeTributario(TableConfig):
+    # XXX: após a mudança do dataset para o dados.gov.br esse arquivo parou de
+    # ser publicado e, com isso, a tabela `regime_tributario_orig` ficará
+    # sempre vazia.
     dialect = "excel"
     filename_patterns = ("Dados Abertos Sítio RFB*.zip", )
     has_header = True
