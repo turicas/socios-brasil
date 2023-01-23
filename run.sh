@@ -24,5 +24,5 @@ python import_rfb.py \
 for filename in urlid 01-functions 02-municipio 03-empresa 04-estabelecimento 05-simples 06-regime_tributario 07-socio; do
 	filename="sql/${filename}.sql"
 	echo "Executing ${filename}"
-	cat "$filename" | psql "$DATABASE_URL"
+	time cat "$filename" | psql "$DATABASE_URL"
 done

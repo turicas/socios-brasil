@@ -7,18 +7,15 @@ CREATE TABLE regime_tributario AS
     r.forma_tributacao,
     CASE
       WHEN r.municipio IS NULL OR r.municipio = 'NULL' THEN NULL
-      ELSE r.municipio
+      ELSE COALESCE(m.nome, r.municipio)
     END AS municipio,
     CASE
       WHEN r.uf IS NULL OR r.uf = 'NULL' THEN NULL
       ELSE r.uf
     END AS uf
-  FROM regime_tributario_orig AS r;
-
--- TODO: quando consertarem os municípios que estão com UF incorreta, adicionar
--- codigo_municipio usando:
---    LEFT JOIN municipio_uf AS m
---      ON r.uf = m.uf AND slug(r.municipio) = slug(m.nome);
+  FROM regime_tributario_orig AS r
+  LEFT JOIN municipio_uf AS m
+    ON r.uf = m.uf AND slug(r.municipio) = slug(m.nome);
 
 CREATE INDEX idx_regime_tributario_id ON regime_tributario (empresa_uuid);
 CREATE INDEX idx_regime_tributario_cnpj ON regime_tributario (cnpj);

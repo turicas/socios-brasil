@@ -145,7 +145,7 @@ class NaturezaJuridica(TableConfig):
 class Municipio(TableConfig):
     filename_patterns = ("*MUNICCSV.zip", "Municipios.zip")
     has_header = False
-    name = "municipio"
+    name = "municipio_orig"
     schema_filename = "mapeamento.csv"
 
 
@@ -166,7 +166,8 @@ class QualificacaoSocio(TableConfig):
 class RegimeTributario(TableConfig):
     # XXX: após a mudança do dataset para o dados.gov.br esse arquivo parou de
     # ser publicado e, com isso, a tabela `regime_tributario_orig` ficará
-    # sempre vazia.
+    # sempre vazia. Esses dados parecem estar disponíveis em:
+    # <https://dadosabertos.rfb.gov.br/CNPJ/anual/>
     dialect = "excel"
     filename_patterns = ("Dados Abertos Sítio RFB*.zip", )
     has_header = True

@@ -222,383 +222,398 @@ WHERE uf = 'BR';
 
 -- Erro em estabelecimento: código do município inválido para UF
 SELECT cnpj_raiz, cnpj_ordem, cnpj_dv, cep, uf, codigo_municipio
-FROM estabelecimento
-WHERE codigo_municipio = 6969 AND uf <> 'SP';
--[ RECORD 1 ]--------------------+-------------------------
-cnpj_raiz                        | 39868640
-cnpj_ordem                       | 0001
-cnpj_dv                          | 53
-cep                              | 68790000
-uf                               | PA
-codigo_municipio                 | 6969
+FROM estabelecimento_orig
+WHERE
+	(codigo_municipio = '7107' AND uf <> 'SP')
+	OR (codigo_municipio = '6001' AND uf <> 'RJ')
+	OR (codigo_municipio = '6969' AND uf <> 'SP');
+--  cnpj_raiz | cnpj_ordem | cnpj_dv |   cep    | uf | codigo_municipio
+-- -----------+------------+---------+----------+----+------------------
+--  05269598  | 0001       | 32      | 20031120 | BR |             6001
+--  39868640  | 0001       | 53      | 68790000 | PA |             6969
+--  47515047  | 0001       | 51      | 44571000 | BA |             7107
 
 
 -- Erro em regime_tributario: UFs estão incorretas para diversos municípios
---  ABADIA DE GOIAS             | MG
---  ABADIA DE GOIAS             | MS
---  ABADIA DE GOIAS             | PE
---  ABADIA DE GOIAS             | RN
---  ABADIA DE GOIAS             | SE
---  ABADIA DE GOIAS             | SP
---  ABADIA DE GOIAS             | TO
---  ABADIA DOS DOURADOS         | GO
---  ABELARDO LUZ                | GO
---  ABREU E LIMA                | ES
---  ACAILANDIA                  | SP
---  ACRELANDIA                  | AL
---  ACRELANDIA                  | MT
---  ACRELANDIA                  | PR
---  ACRELANDIA                  | RO
---  ACRELANDIA                  | RS
---  ACRELANDIA                  | SC
---  ACRELANDIA                  | SP
---  AFONSO CUNHA                | SP
---  AGUAS DA PRATA              | MG
---  ALFENAS                     | SP
---  ALTA FLORESTA               | RO
---  ALTA FLORESTA D'OESTE       | DF
---  ALTA FLORESTA D'OESTE       | ES
---  ALTA FLORESTA D'OESTE       | GO
---  ALTA FLORESTA D'OESTE       | PA
---  ALTA FLORESTA D'OESTE       | RJ
---  ALTA FLORESTA D'OESTE       | TO
---  ALTAMIRA                    | SP
---  ALTAMIRA DO MARANHAO        | SP
---  ALTO BOA VISTA              | SP
---  ALTONIA                     | SP
---  ALVORADA D'OESTE            | SP
---  AMERICANA                   | BA
---  AMERICANA                   | MG
---  AMERICANA                   | PR
---  AMERICANA                   | RJ
---  AMPARO DO SERRA             | MG
---  APARECIDA DE GOIANIA        | CE
---  ARACAJU                     | BA
---  ARACAJU                     | PA
---  ARACATUBA                   | MS
---  ARACITABA                   | SP
---  ARAIOSES                    | SP
---  ARAPIRACA                   | SP
---  ARAPOEMA                    | SC
---  ARAPORA                     | GO
---  ARARANGUA                   | RS
---  ARARAQUARA                  | RJ
---  ARATUBA                     | SE
---  ARAUA                       | SP
---  ARIQUEMES                   | MA
---  ARIQUEMES                   | SP
---  BALIZA                      | SC
---  BALNEARIO PICARRAS          | SC
---  BARRACAO                    | SC
---  BARRA DO BUGRES             | MG
---  BARRA DO OURO               | SP
---  BARRETOS                    | MG
---  BARUERI                     | PE
---  BARUERI                     | RJ
---  BARUERI                     | SC
---  BATATAIS                    | RN
---  BELEM                       | RO
---  BELEM DO SAO FRANCISCO      | PE
---  BELO HORIZONTE              | AM
---  BELO HORIZONTE              | RJ
---  BENEVIDES                   | BA
---  BLUMENAU                    | PR
---  BLUMENAU                    | SP
---  BOA NOVA                    | SP
---  BOA VIAGEM                  | PE
---  BOA VISTA                   | RS
---  BODO                        | SP
---  BOM JARDIM                  | SC
---  BRACO DO NORTE              | SP
---  BRASILEIA                   | AL
---  BRASILEIA                   | AM
---  BRASILEIA                   | BA
---  BRASILEIA                   | CE
---  BRASILEIA                   | DF
---  BRASILEIA                   | GO
---  BRASILEIA                   | MG
---  BRASILEIA                   | PA
---  BRASILEIA                   | PR
---  BRASILEIA                   | RJ
---  BRASILEIA                   | RS
---  BRASILEIA                   | SC
---  BRASILEIA                   | SP
---  BRASILIA                    | GO
---  BRASILIA                    | RJ
---  BRASILIA                    | SP
---  BRASILIA                    | TO
---  BRASILIA DE MINAS           | DF
---  BRASIL NOVO                 | SP
---  BRAZOPOLIS                  | MG
---  BREJO GRANDE DO ARAGUAIA    | MG
---  BURITI DOS LOPES            | SP
---  CACHOEIRA DO SUL            | RN
---  CAMACAN                     | SP
---  CAMBE                       | AP
---  CAMPINAS                    | MG
---  CAMPO GRANDE                | PR
---  CAMPO GRANDE                | SP
---  CANELA                      | SP
---  CAPIVARI                    | BA
---  CARAPICUIBA                 | RJ
---  CARATINGA                   | SP
---  CASTANHEIRAS                | SP
---  CATALAO                     | MG
---  CATALAO                     | SP
---  CEREJEIRAS                  | PR
---  CERQUEIRA CESAR             | RJ
---  CHA GRANDE                  | SP
---  CHAPECO                     | PR
---  CHAPECO                     | RS
---  CHIAPETTA                   | SP
---  COARACI                     | RJ
---  COCALZINHO DE GOIAS         | SP
---  CONDEUBA                    | SP
---  CORONEL SAPUCAIA            | PR
---  COUTO MAGALHAES             | TO
---  CRUZEIRO DO SUL             | SP
---  CUIABA                      | MS
---  CURITIBA                    | MT
---  CURITIBA                    | RS
---  CURITIBA                    | SC
---  CURITIBA                    | SP
---  DARIO MEIRA                 | SP
---  DIAMANTINO                  | MG
---  DOM PEDRITO                 | MT
---  ELDORADO DO CARAJAS         | PA
---  ENTRE IJUIS                 | SC
---  ESCADA                      | RJ
---  ESPERANCA DO SUL            | SP
---  EUGENIO DE CASTRO           | SP
---  EUSEBIO                     | SP
---  EXTERIOR                    | BA
---  EXTERIOR                    | MG
---  EXTERIOR                    | MS
---  EXTERIOR                    | SP
---  EXTREMA                     | PR
---  EXTREMOZ                    | ES
---  FEIRA DE SANTANA            | SC
---  FERREIRA GOMES              | SP
---  FIRMINOPOLIS                | MT
---  FLORESTOPOLIS               | SC
---  FLORIANO                    | SC
---  FLORIANOPOLIS               | DF
---  FLORIDA                     | SC
---  FORMOSA DO RIO PRETO        | PR
---  FORTALEZA                   | BA
---  FORTALEZA DO TABOCAO        | CE
---  FRAIBURGO                   | SP
---  FRANCISCO SANTOS            | PR
---  GLORINHA                    | GO
---  GOIANA                      | GO
---  GOIANESIA DO PARA           | GO
---  GOIANIA                     | DF
---  GOIANIA                     | PR
---  GOIANIA                     | TO
---  GRUPIARA                    | RJ
---  GUAJARA-MIRIM               | AM
---  GUAJARA-MIRIM               | SP
---  GUARAPUAVA                  | RS
---  GUARULHOS                   | MG
---  GUARULHOS                   | PR
---  GUARULHOS                   | SC
---  GURUPI                      | GO
---  GURUPI                      | SC
---  ICATU                       | SP
---  IGREJINHA                   | RN
---  IGREJINHA                   | SC
---  IGREJINHA                   | SP
---  IGUABA GRANDE               | ES
---  IGUARACY                    | PE
---  IGUATU                      | SP
---  INDAIABIRA                  | SC
---  IPIRANGA DO PIAUI           | PR
---  IPIXUNA                     | SP
---  ITAJA                       | SC
---  ITAPORA                     | MG
---  ITAPORANGA                  | PR
---  IVINHEMA                    | PR
---  JABOATAO DOS GUARARAPES     | PA
---  JANDAIA                     | PR
---  JARDIM DE ANGICOS           | SP
---  JARU                        | GO
---  JAU                         | BA
---  JOACABA                     | PR
---  JOAQUIM PIRES               | SP
---  JOINVILLE                   | SP
---  JOSE RAYDAN                 | SP
---  JUNDIAI                     | PR
---  JURUTI                      | SP
---  LAGEDO DO TABOCAL           | BA
---  LAGOA DE ITAENGA            | PE
---  LAGOA DOS PATOS             | DF
---  LAJEADO GRANDE              | BA
---  LAJEADO GRANDE              | PR
---  LAURO DE FREITAS            | GO
---  LINHARES                    | SC
---  LUCAS DO RIO VERDE          | PA
---  LUCIARA                     | SC
---  MACAE                       | SP
---  MACEIO                      | PR
---  MACEIO                      | SC
---  MAMANGUAPE                  | AL
---  MANAUS                      | RR
---  MANAUS                      | SP
---  MANGUEIRINHA                | DF
---  MARACANAU                   | SC
---  MARECHAL THAUMATURGO        | RS
---  MARINGA                     | AC
---  MARITUBA                    | MG
---  MATHIAS LOBATO              | PR
---  MATO GROSSO                 | MT
---  MATO LEITAO                 | SP
---  MAUA DA SERRA               | SP
---  MIRASSOL D'OESTE            | GO
---  MONSENHOR TABOSA            | PR
---  MORADA NOVA DE MINAS        | SP
---  MOREIRA SALES               | SP
---  MUITOS CAPOES               | SP
---  MUNHOZ DE MELLO             | PR
---  MUQUEM DO SAO FRANCISCO     | BA
---  NAVIRAI                     | BA
---  NITEROI                     | SP
---  NOSSA SENHORA DO LIVRAMENTO | SC
---  NOVA BRASILANDIA D'OESTE    | PE
---  NOVA CANDELARIA             | SP
---  NOVA OLINDA DO NORTE        | PE
---  NOVA RAMADA                 | SP
---  NOVO ORIENTE DO PIAUI       | PR
---  OEIRAS DO PARA              | SP
---  OLINDA                      | AL
---  OLINDA                      | AM
---  OSASCO                      | PA
---  OSASCO                      | RS
---  PAICANDU                    | SC
---  PALMAS                      | SC
---  PALMEIRAS DE GOIAS          | MT
---  PARAISO DO TOCANTINS        | RS
---  PARELHAS                    | SP
---  PARNAGUA                    | PR
---  PELOTAS                     | PR
---  PERUIBE                     | RJ
---  PETROLINA                   | BA
---  PIMENTA BUENO               | SP
---  PINHAIS                     | SC
---  PIRACICABA                  | BA
---  PIRIPIRI                    | PR
---  PLANALTO ALEGRE             | RS
---  PONTA PORA                  | RS
---  PORTALEGRE                  | RS
---  PORTAO                      | BA
---  PORTO ALEGRE                | RJ
---  PORTO ALEGRE                | SC
---  PORTO ALEGRE                | SP
---  PORTO SEGURO                | SP
---  PRIMAVERA                   | SP
---  PRIMAVERA DO LESTE          | MS
---  QUERENCIA                   | SP
---  RECIFE                      | CE
---  RECIFE                      | SE
---  RECIFE                      | SP
---  RIACHAO                     | SP
---  RIO ACIMA                   | RJ
---  RIO BRANCO                  | GO
---  RIO CLARO                   | PE
---  RIO DAS PEDRAS              | RJ
---  RIO DE JANEIRO              | BA
---  RIO DE JANEIRO              | DF
---  RIO DE JANEIRO              | ES
---  RIO DE JANEIRO              | MG
---  RIO DE JANEIRO              | SP
---  RIO DO PRADO                | SP
---  RORAINOPOLIS                | SP
---  SAGRADA FAMILIA             | SP
---  SALVADOR                    | PE
---  SALVADOR                    | RJ
---  SALVADOR                    | RS
---  SANTA CRUZ DO RIO PARDO     | PR
---  SANTA IZABEL DO PARA        | PA
---  SANTA IZABEL DO PARA        | SP
---  SANTA MARIA DO SUACUI       | SP
---  SANTANA DE PARNAIBA         | MG
---  SANT'ANA DO LIVRAMENTO      | RS
---  SANTA ROSA                  | ES
---  SANTO ANDRE                 | ES
---  SANTO ANTONIO DA PATRULHA   | SP
---  SANTOS                      | BA
---  SAO BERNARDO                | SP
---  SAO DESIDERIO               | SP
---  SAO DOMINGOS DAS DORES      | SP
---  SAO GERALDO DO ARAGUAIA     | SP
---  SAO GONCALO DO AMARANTE     | RJ
---  SAO JOAO DA LAGOA           | SP
---  SAO JOSE                    | SP
---  SAO JOSE DO BREJO DO CRUZ   | SP
---  SAO JOSE DOS PINHAIS        | RJ
---  SAO JOSE DOS PINHAIS        | RS
---  SAO JOSE DOS PINHAIS        | SC
---  SAO LOURENCO                | SP
---  SAO LUIS                    | GO
---  SAO LUIS                    | MG
---  SAO LUIS                    | TO
---  SAO LUIS DO QUITUNDE        | MA
---  SAO LUIZ                    | MA
---  SAO MATEUS                  | MG
---  SAO PATRICIO                | SP
---  SAO PAULO                   | AM
---  SAO PAULO                   | AP
---  SAO PAULO                   | DF
---  SAO PAULO                   | ES
---  SAO PAULO                   | GO
---  SAO PAULO                   | MG
---  SAO PAULO                   | MS
---  SAO PAULO                   | PE
---  SAO PAULO                   | PR
---  SAO PAULO                   | RJ
---  SAO PAULO                   | SC
---  SAO PAULO                   | SE
---  SAO PAULO DAS MISSOES       | SP
---  SAO SEBASTIAO DO MARANHAO   | SP
---  SAO THOME DAS LETRAS        | MG
---  SAPUCAIA                    | RS
---  SERRA                       | MG
---  SERRA                       | PE
---  SERRA                       | PR
---  SERRA                       | RJ
---  SERRA                       | SP
---  SERRA DOS AIMORES           | SP
---  SILVEIRANIA                 | SP
---  SINOP                       | BA
---  SOBRADINHO                  | SP
---  TAGUATINGA                  | RJ
---  TALISMA                     | SP
---  TANGUA                      | SP
---  TAQUARA                     | PA
---  TIETE                       | MG
---  TOCANTINS                   | TO
---  TUPASSI                     | GO
---  UMUARAMA                    | MG
---  UMUARAMA                    | MS
---  URUANA DE MINAS             | PR
---  URUTAI                      | RJ
---  VALINHOS                    | PR
---  VALPARAISO                  | DF
---  VALPARAISO                  | GO
---  VARGEM                      | GO
---  VARZEA BRANCA               | MT
---  VILA NOVA DO PIAUI          | SP
---  VIRGEM DA LAPA              | SP
---  VITORIA                     | RJ
---  VITORIA                     | SP
---  VITORIA DO XINGU            | ES
---  VOLTA GRANDE                | ES
---  VOTUPORANGA                 | MG
---  WENCESLAU BRAZ              | RS
---  WENCESLAU BRAZ              | SC
---  XAMBIOA                     | PR
---  XAMBIOA                     | SP
---  ZABELE                      | SP
---  ZORTEA                      | SP
+SELECT
+	r.uf,
+	r.municipio,
+	COUNT(*) AS total
+FROM regime_tributario_orig AS r
+LEFT JOIN municipio_uf AS m
+	ON r.uf = m.uf AND slug(r.municipio) = m.nome_slug
+WHERE m.uf IS NULL OR m.nome IS NULL
+GROUP BY r.uf, r.municipio;
+--   uf  |          municipio          | total
+-- ------+-----------------------------+-------
+--  AC   | MARINGA                     |     1
+--  AL   | ACRELANDIA                  |     2
+--  AL   | BRASILEIA                   |     1
+--  AL   | MAMANGUAPE                  |     1
+--  AL   | OLINDA                      |     1
+--  AM   | BELO HORIZONTE              |     1
+--  AM   | BRASILEIA                   |     1
+--  AM   | GUAJARA-MIRIM               |     1
+--  AM   | OLINDA                      |     1
+--  AM   | SAO PAULO                   |     2
+--  AP   | CAMBE                       |     1
+--  AP   | SAO PAULO                   |     1
+--  BA   | AMERICANA                   |     1
+--  BA   | ARACAJU                     |     1
+--  BA   | BENEVIDES                   |     2
+--  BA   | BRASILEIA                   |     2
+--  BA   | CAPIVARI                    |     2
+--  BA   | EXTERIOR                    |     1
+--  BA   | FORTALEZA                   |     1
+--  BA   | JAU                         |     1
+--  BA   | LAGEDO DO TABOCAL           |    51
+--  BA   | LAJEADO GRANDE              |     2
+--  BA   | MUQUEM DO SAO FRANCISCO     |   117
+--  BA   | NAVIRAI                     |     1
+--  BA   | PETROLINA                   |     5
+--  BA   | PIRACICABA                  |     3
+--  BA   | PORTAO                      |     1
+--  BA   | RIO DE JANEIRO              |     5
+--  BA   | SANTOS                      |     1
+--  BA   | SINOP                       |     2
+--  CE   | APARECIDA DE GOIANIA        |     1
+--  CE   | BRASILEIA                   |     1
+--  CE   | FORTALEZA DO TABOCAO        |     1
+--  CE   | RECIFE                      |     3
+--  DF   | ALTA FLORESTA D'OESTE       |     1
+--  DF   | BRASILEIA                   |     2
+--  DF   | BRASILIA DE MINAS           |     1
+--  DF   | FLORIANOPOLIS               |     1
+--  DF   | GOIANIA                     |     2
+--  DF   | LAGOA DOS PATOS             |     1
+--  DF   | MANGUEIRINHA                |     1
+--  DF   | RIO DE JANEIRO              |     7
+--  DF   | SAO PAULO                   |     1
+--  DF   | VALPARAISO                  |     1
+--  ES   | ABREU E LIMA                |     1
+--  ES   | ALTA FLORESTA D'OESTE       |     2
+--  ES   | EXTREMOZ                    |     1
+--  ES   | IGUABA GRANDE               |    11
+--  ES   | RIO DE JANEIRO              |     3
+--  ES   | SANTA ROSA                  |     1
+--  ES   | SANTO ANDRE                 |     2
+--  ES   | SAO PAULO                   |     1
+--  ES   | VITORIA DO XINGU            |     3
+--  ES   | VOLTA GRANDE                |     6
+--  GO   | ABADIA DOS DOURADOS         |     7
+--  GO   | ABELARDO LUZ                |     1
+--  GO   | ALTA FLORESTA D'OESTE       |     9
+--  GO   | ARAPORA                     |     1
+--  GO   | BRASILEIA                   |     2
+--  GO   | BRASILIA                    |    20
+--  GO   | GLORINHA                    |     1
+--  GO   | GOIANA                      |     7
+--  GO   | GOIANESIA DO PARA           |     1
+--  GO   | GURUPI                      |     2
+--  GO   | JARU                        |     5
+--  GO   | LAURO DE FREITAS            |     1
+--  GO   | MIRASSOL D'OESTE            |     2
+--  GO   | RIO BRANCO                  |     1
+--  GO   | SAO LUIS                    |     1
+--  GO   | SAO PAULO                   |     3
+--  GO   | TUPASSI                     |     1
+--  GO   | VALPARAISO                  |     1
+--  GO   | VARGEM                      |     1
+--  MA   | ARIQUEMES                   |     1
+--  MA   | SAO LUIS DO QUITUNDE        |     1
+--  MA   | SAO LUIZ                    |     1
+--  MG   | ABADIA DE GOIAS             |    27
+--  MG   | AGUAS DA PRATA              |     1
+--  MG   | AMERICANA                   |     3
+--  MG   | AMPARO DO SERRA             |    95
+--  MG   | BARRA DO BUGRES             |     6
+--  MG   | BARRETOS                    |     1
+--  MG   | BRASILEIA                   |    12
+--  MG   | BRAZOPOLIS                  |   371
+--  MG   | BREJO GRANDE DO ARAGUAIA    |     1
+--  MG   | CAMPINAS                    |     2
+--  MG   | CATALAO                     |     1
+--  MG   | DIAMANTINO                  |     1
+--  MG   | EXTERIOR                    |     1
+--  MG   | GUARULHOS                   |     1
+--  MG   | ITAPORA                     |     4
+--  MG   | MARITUBA                    |     7
+--  MG   | RIO DE JANEIRO              |     1
+--  MG   | SANTANA DE PARNAIBA         |     1
+--  MG   | SAO LUIS                    |     1
+--  MG   | SAO MATEUS                  |     1
+--  MG   | SAO PAULO                   |     3
+--  MG   | SAO THOME DAS LETRAS        |   158
+--  MG   | SERRA                       |     1
+--  MG   | TIETE                       |     1
+--  MG   | UMUARAMA                    |     1
+--  MG   | VOTUPORANGA                 |     2
+--  MS   | ABADIA DE GOIAS             |     2
+--  MS   | ARACATUBA                   |     2
+--  MS   | CUIABA                      |     1
+--  MS   | EXTERIOR                    |     2
+--  MS   | NULL                        |     1
+--  MS   | PRIMAVERA DO LESTE          |     1
+--  MS   | SAO PAULO                   |     1
+--  MS   | UMUARAMA                    |     4
+--  MT   | ACRELANDIA                  |     1
+--  MT   | CURITIBA                    |     1
+--  MT   | DOM PEDRITO                 |     2
+--  MT   | FIRMINOPOLIS                |     1
+--  MT   | MATO GROSSO                 |     2
+--  MT   | PALMEIRAS DE GOIAS          |     1
+--  MT   | VARZEA BRANCA               |     1
+--  NULL | NULL                        |    12
+--  PA   | ALTA FLORESTA D'OESTE       |    32
+--  PA   | ARACAJU                     |     4
+--  PA   | BRASILEIA                   |     2
+--  PA   | ELDORADO DO CARAJAS         |   168
+--  PA   | JABOATAO DOS GUARARAPES     |     1
+--  PA   | LUCAS DO RIO VERDE          |     3
+--  PA   | OSASCO                      |     1
+--  PA   | SANTA IZABEL DO PARA        |   852
+--  PA   | TAQUARA                     |     1
+--  PE   | ABADIA DE GOIAS             |     1
+--  PE   | BARUERI                     |     1
+--  PE   | BELEM DO SAO FRANCISCO      |   194
+--  PE   | BOA VIAGEM                  |     2
+--  PE   | IGUARACY                    |    54
+--  PE   | LAGOA DE ITAENGA            |   193
+--  PE   | NOVA BRASILANDIA D'OESTE    |     2
+--  PE   | NOVA OLINDA DO NORTE        |     1
+--  PE   | RIO CLARO                   |     3
+--  PE   | SALVADOR                    |     2
+--  PE   | SAO PAULO                   |     2
+--  PE   | SERRA                       |     1
+--  PR   | ACRELANDIA                  |    10
+--  PR   | AMERICANA                   |     1
+--  PR   | BLUMENAU                    |     1
+--  PR   | BRASILEIA                   |     5
+--  PR   | CAMPO GRANDE                |     1
+--  PR   | CEREJEIRAS                  |     2
+--  PR   | CHAPECO                     |     1
+--  PR   | CORONEL SAPUCAIA            |     6
+--  PR   | EXTREMA                     |     1
+--  PR   | FORMOSA DO RIO PRETO        |     2
+--  PR   | FRANCISCO SANTOS            |     3
+--  PR   | GOIANIA                     |     1
+--  PR   | GUARULHOS                   |     1
+--  PR   | IPIRANGA DO PIAUI           |     2
+--  PR   | ITAPORANGA                  |     1
+--  PR   | IVINHEMA                    |     1
+--  PR   | JANDAIA                     |     8
+--  PR   | JOACABA                     |     1
+--  PR   | JUNDIAI                     |     1
+--  PR   | LAJEADO GRANDE              |     1
+--  PR   | MACEIO                      |     2
+--  PR   | MATHIAS LOBATO              |     1
+--  PR   | MONSENHOR TABOSA            |     1
+--  PR   | MUNHOZ DE MELLO             |    87
+--  PR   | NOVO ORIENTE DO PIAUI       |     7
+--  PR   | PARNAGUA                    |     2
+--  PR   | PELOTAS                     |     1
+--  PR   | PIRIPIRI                    |     4
+--  PR   | SANTA CRUZ DO RIO PARDO     |     1
+--  PR   | SAO PAULO                   |     5
+--  PR   | SERRA                       |     2
+--  PR   | URUANA DE MINAS             |     1
+--  PR   | VALINHOS                    |     1
+--  PR   | XAMBIOA                     |     2
+--  RJ   | ALTA FLORESTA D'OESTE       |     2
+--  RJ   | AMERICANA                   |     3
+--  RJ   | ARARAQUARA                  |     1
+--  RJ   | BARUERI                     |     1
+--  RJ   | BELO HORIZONTE              |     1
+--  RJ   | BRASILEIA                   |    16
+--  RJ   | BRASILIA                    |     5
+--  RJ   | CARAPICUIBA                 |     1
+--  RJ   | CERQUEIRA CESAR             |     1
+--  RJ   | COARACI                     |     2
+--  RJ   | ESCADA                      |     2
+--  RJ   | GRUPIARA                    |     2
+--  RJ   | PERUIBE                     |     1
+--  RJ   | PORTO ALEGRE                |     2
+--  RJ   | RIO ACIMA                   |     1
+--  RJ   | RIO DAS PEDRAS              |     1
+--  RJ   | SALVADOR                    |     2
+--  RJ   | SAO GONCALO DO AMARANTE     |     1
+--  RJ   | SAO JOSE DOS PINHAIS        |     1
+--  RJ   | SAO PAULO                   |    13
+--  RJ   | SERRA                       |     2
+--  RJ   | TAGUATINGA                  |     1
+--  RJ   | URUTAI                      |     9
+--  RJ   | VITORIA                     |     2
+--  RN   | ABADIA DE GOIAS             |     2
+--  RN   | BATATAIS                    |     1
+--  RN   | CACHOEIRA DO SUL            |     1
+--  RN   | IGREJINHA                   |     1
+--  RO   | ACRELANDIA                  |     1
+--  RO   | ALTA FLORESTA               |     1
+--  RO   | BELEM                       |     1
+--  RR   | MANAUS                      |     1
+--  RS   | ACRELANDIA                  |     3
+--  RS   | ARARANGUA                   |     1
+--  RS   | BOA VISTA                   |     1
+--  RS   | BRASILEIA                   |     3
+--  RS   | CHAPECO                     |     1
+--  RS   | CURITIBA                    |     3
+--  RS   | GUARAPUAVA                  |     1
+--  RS   | MARECHAL THAUMATURGO        |     1
+--  RS   | NULL                        |   126
+--  RS   | OSASCO                      |     1
+--  RS   | PARAISO DO TOCANTINS        |     1
+--  RS   | PLANALTO ALEGRE             |     9
+--  RS   | PONTA PORA                  |     1
+--  RS   | PORTALEGRE                  |     1
+--  RS   | SALVADOR                    |     1
+--  RS   | SANT'ANA DO LIVRAMENTO      |  3412
+--  RS   | SAO JOSE DOS PINHAIS        |     1
+--  RS   | SAPUCAIA                    |     2
+--  RS   | WENCESLAU BRAZ              |     2
+--  SC   | ACRELANDIA                  |     1
+--  SC   | ARAPOEMA                    |     2
+--  SC   | BALIZA                      |    89
+--  SC   | BALNEARIO PICARRAS          |  1169
+--  SC   | BARRACAO                    |     3
+--  SC   | BARUERI                     |     2
+--  SC   | BOM JARDIM                  |     1
+--  SC   | BRASILEIA                   |     1
+--  SC   | CURITIBA                    |     2
+--  SC   | ENTRE IJUIS                 |     1
+--  SC   | FEIRA DE SANTANA            |     2
+--  SC   | FLORESTOPOLIS               |     2
+--  SC   | FLORIANO                    |     4
+--  SC   | FLORIDA                     |     1
+--  SC   | GUARULHOS                   |     2
+--  SC   | GURUPI                      |     9
+--  SC   | IGREJINHA                   |     3
+--  SC   | INDAIABIRA                  |     1
+--  SC   | ITAJA                       |     1
+--  SC   | LINHARES                    |     3
+--  SC   | LUCIARA                     |     1
+--  SC   | MACEIO                      |     1
+--  SC   | MARACANAU                   |     1
+--  SC   | NOSSA SENHORA DO LIVRAMENTO |    20
+--  SC   | PAICANDU                    |     2
+--  SC   | PALMAS                      |     6
+--  SC   | PINHAIS                     |     1
+--  SC   | PORTO ALEGRE                |     2
+--  SC   | SAO JOSE DOS PINHAIS        |     1
+--  SC   | SAO PAULO                   |     2
+--  SC   | WENCESLAU BRAZ              |     2
+--  SE   | ABADIA DE GOIAS             |     2
+--  SE   | ARATUBA                     |     2
+--  SE   | RECIFE                      |     2
+--  SE   | SAO PAULO                   |     1
+--  SP   | ABADIA DE GOIAS             |     1
+--  SP   | ACAILANDIA                  |     2
+--  SP   | ACRELANDIA                  |     2
+--  SP   | AFONSO CUNHA                |     1
+--  SP   | ALFENAS                     |     1
+--  SP   | ALTAMIRA                    |     1
+--  SP   | ALTAMIRA DO MARANHAO        |     2
+--  SP   | ALTO BOA VISTA              |    15
+--  SP   | ALTONIA                     |     1
+--  SP   | ALVORADA D'OESTE            |     1
+--  SP   | ARACITABA                   |     2
+--  SP   | ARAIOSES                    |     3
+--  SP   | ARAPIRACA                   |     1
+--  SP   | ARAUA                       |     4
+--  SP   | ARIQUEMES                   |     6
+--  SP   | BARRA DO OURO               |     2
+--  SP   | BLUMENAU                    |     1
+--  SP   | BOA NOVA                    |     1
+--  SP   | BODO                        |     1
+--  SP   | BRACO DO NORTE              |     1
+--  SP   | BRASILEIA                   |  8028
+--  SP   | BRASILIA                    |     3
+--  SP   | BRASIL NOVO                 |     2
+--  SP   | BURITI DOS LOPES            |     4
+--  SP   | CAMACAN                     |     8
+--  SP   | CAMPO GRANDE                |     1
+--  SP   | CANELA                      |     1
+--  SP   | CARATINGA                   |     1
+--  SP   | CASTANHEIRAS                |     2
+--  SP   | CATALAO                     |     2
+--  SP   | CHA GRANDE                  |     2
+--  SP   | CHIAPETTA                   |     1
+--  SP   | COCALZINHO DE GOIAS         |     2
+--  SP   | CONDEUBA                    |     2
+--  SP   | CRUZEIRO DO SUL             |     1
+--  SP   | CURITIBA                    |     2
+--  SP   | DARIO MEIRA                 |     2
+--  SP   | ESPERANCA DO SUL            |    17
+--  SP   | EUGENIO DE CASTRO           |     1
+--  SP   | EUSEBIO                     |     1
+--  SP   | EXTERIOR                    |     8
+--  SP   | FERREIRA GOMES              |     2
+--  SP   | FRAIBURGO                   |     6
+--  SP   | GUAJARA-MIRIM               |    11
+--  SP   | ICATU                       |     1
+--  SP   | IGREJINHA                   |     1
+--  SP   | IGUATU                      |     1
+--  SP   | IPIXUNA                     |     3
+--  SP   | JARDIM DE ANGICOS           |    10
+--  SP   | JOAQUIM PIRES               |     1
+--  SP   | JOINVILLE                   |     2
+--  SP   | JOSE RAYDAN                 |     1
+--  SP   | JURUTI                      |     1
+--  SP   | MACAE                       |     1
+--  SP   | MANAUS                      |     2
+--  SP   | MATO LEITAO                 |     1
+--  SP   | MAUA DA SERRA               |    29
+--  SP   | MORADA NOVA DE MINAS        |     1
+--  SP   | MOREIRA SALES               |     3
+--  SP   | MUITOS CAPOES               |     1
+--  SP   | NITEROI                     |     1
+--  SP   | NOVA CANDELARIA             |    11
+--  SP   | NOVA RAMADA                 |     1
+--  SP   | OEIRAS DO PARA              |     1
+--  SP   | PARELHAS                    |     2
+--  SP   | PIMENTA BUENO               |     6
+--  SP   | PORTO ALEGRE                |     1
+--  SP   | PORTO SEGURO                |     2
+--  SP   | PRIMAVERA                   |     1
+--  SP   | QUERENCIA                   |     1
+--  SP   | RECIFE                      |     1
+--  SP   | RIACHAO                     |     1
+--  SP   | RIO DE JANEIRO              |     7
+--  SP   | RIO DO PRADO                |     2
+--  SP   | RORAINOPOLIS                |     2
+--  SP   | SAGRADA FAMILIA             |     1
+--  SP   | SANTA IZABEL DO PARA        |     1
+--  SP   | SANTA MARIA DO SUACUI       |     1
+--  SP   | SANTO ANTONIO DA PATRULHA   |     2
+--  SP   | SAO BERNARDO                |     1
+--  SP   | SAO DESIDERIO               |     2
+--  SP   | SAO DOMINGOS DAS DORES      |     1
+--  SP   | SAO GERALDO DO ARAGUAIA     |     1
+--  SP   | SAO JOAO DA LAGOA           |     1
+--  SP   | SAO JOSE                    |     1
+--  SP   | SAO JOSE DO BREJO DO CRUZ   |     1
+--  SP   | SAO LOURENCO                |     1
+--  SP   | SAO PATRICIO                |     1
+--  SP   | SAO PAULO DAS MISSOES       |     1
+--  SP   | SAO SEBASTIAO DO MARANHAO   |     1
+--  SP   | SERRA                       |     4
+--  SP   | SERRA DOS AIMORES           |     2
+--  SP   | SILVEIRANIA                 |     1
+--  SP   | SOBRADINHO                  |     2
+--  SP   | TALISMA                     |     1
+--  SP   | TANGUA                      |     1
+--  SP   | VILA NOVA DO PIAUI          |     2
+--  SP   | VIRGEM DA LAPA              |    12
+--  SP   | VITORIA                     |     1
+--  SP   | XAMBIOA                     |     2
+--  SP   | ZABELE                      |     2
+--  SP   | ZORTEA                      |    10
+--  TO   | ABADIA DE GOIAS             |     1
+--  TO   | ALTA FLORESTA D'OESTE       |     1
+--  TO   | BRASILIA                    |     5
+--  TO   | COUTO MAGALHAES             |    60
+--  TO   | GOIANIA                     |     1
+--  TO   | SAO LUIS                    |     1
+--  TO   | TOCANTINS                   |     1
 
 
 -- TODO: comparar tabela de municípios do IBGE com municipio_uf (usando slug)

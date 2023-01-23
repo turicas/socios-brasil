@@ -29,12 +29,18 @@ CREATE TABLE estabelecimento AS
       WHEN LENGTH(cep) = 7 THEN '0' || cep
       ELSE cep -- não deveria acontecer
     END AS cep,
-    CASE -- Conserta erro de preenchimento em cnpj_raiz = 05269598
-      WHEN uf = 'BR' THEN 'RJ'
+
+    -- Conserta erro de preenchimento cnpj_raiz = 05269598, 39868640, 47515047
+    CASE
+      WHEN codigo_municipio = 6001 AND uf = 'BR' THEN 'RJ'
+      WHEN codigo_municipio = 6969 AND uf = 'PA' THEN 'PA'
+      WHEN codigo_municipio = 7107 AND uf = 'BA' THEN 'BA'
       ELSE uf
     END AS uf,
-    (CASE -- Conserta erro de preenchimento cnpj_raiz = 39868640
+    (CASE
+      WHEN codigo_municipio = 6001 AND uf = 'BR' THEN 6001
       WHEN codigo_municipio = 6969 AND uf = 'PA' THEN 529
+      WHEN codigo_municipio = 7107 AND uf = 'BA' THEN 3873
       ELSE codigo_municipio
     END)::smallint AS codigo_municipio,
     TRIM(ddd_1) AS ddd_1, -- TODO: normalizar/limpar?
