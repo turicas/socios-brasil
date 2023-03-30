@@ -617,3 +617,21 @@ GROUP BY r.uf, r.municipio;
 
 
 -- TODO: comparar tabela de municípios do IBGE com municipio_uf (usando slug)
+
+
+-- Erro em estabelecimento: data com menos de 8 caracteres
+SELECT
+  cnpj_raiz,
+  data_situacao_cadastral,
+  data_situacao_especial,
+  data_inicio_atividade
+FROM estabelecimento_orig
+WHERE
+  (data_situacao_cadastral <> '0' AND data_situacao_cadastral IS NOT NULL AND LENGTH(data_situacao_cadastral) < 8)
+  OR (data_situacao_especial <> '0' AND data_situacao_especial IS NOT NULL AND LENGTH(data_situacao_especial) < 8)
+  OR (data_inicio_atividade <> '0' AND data_inicio_atividade IS NOT NULL AND LENGTH(data_inicio_atividade) < 8)
+;
+--  cnpj_raiz | data_situacao_cadastral | data_situacao_especial | data_inicio_atividade
+-- -----------+-------------------------+------------------------+-----------------------
+--  49009023  | 2021221                 |                        | 2021221
+

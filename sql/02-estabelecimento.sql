@@ -11,11 +11,21 @@ CREATE TABLE estabelecimento AS
     END AS matriz,
     nome_fantasia,
     codigo_situacao_cadastral::smallint AS codigo_situacao_cadastral,
-    parse_date(data_situacao_cadastral) AS data_situacao_cadastral,
+    parse_date(
+      CASE
+        WHEN data_situacao_cadastral = '2021221' THEN '20210221'
+        ELSE data_situacao_cadastral
+      END
+    ) AS data_situacao_cadastral,
     codigo_motivo_situacao_cadastral::smallint AS codigo_motivo_situacao_cadastral,
     TRIM(cidade_exterior) AS cidade_exterior,
     codigo_pais::smallint AS codigo_pais,
-    parse_date(data_inicio_atividade) AS data_inicio_atividade,
+    parse_date(
+      CASE
+        WHEN data_inicio_atividade = '2021221' THEN '20210221'
+        ELSE data_inicio_atividade
+      END
+    ) AS data_inicio_atividade,
     cnae_principal,
     STRING_TO_ARRAY(cnae_secundaria, ',') AS cnae_secundaria,
     TRIM(tipo_logradouro) AS tipo_logradouro, -- TODO: normalizar?
