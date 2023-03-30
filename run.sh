@@ -21,7 +21,7 @@ python import_rfb.py \
 	"data/download/$(ls --color=no -tr data/download | tail -1)" \
 	all
 
-for filename in urlid 01-functions 02-municipio 03-empresa 04-estabelecimento 05-simples 06-regime_tributario 07-socio; do
+for filename in urlid 01-functions 02-estabelecimento 03-municipio 04-empresa 05-simples 06-regime_tributario 07-socio; do
 	filename="sql/${filename}.sql"
 	echo "Executing ${filename}"
 	time cat "$filename" | psql "$DATABASE_URL"
