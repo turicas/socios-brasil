@@ -169,7 +169,13 @@ class RegimeTributario(TableConfig):
     # sempre vazia. Esses dados parecem estar disponíveis em:
     # <https://dadosabertos.rfb.gov.br/CNPJ/anual/>
     dialect = "excel"
-    filename_patterns = ("Dados Abertos Sítio RFB*.zip", )
+    filename_patterns = (
+        "Dados Abertos Sítio RFB*.zip",
+        "Imunes e isentas.zip",
+        "Lucro Arbitrado.zip",
+        "Lucro Presumido.zip",
+        "Lucro Real.zip",
+    )
     has_header = True
     inner_filename_pattern = "*.csv"
     name = "regime_tributario_orig"
