@@ -1,8 +1,8 @@
 services:
   db:
-    image: postgres:14-bullseye
+    image: postgres:15-bullseye
     env_file: .env
-    shm_size: 4g
+    shm_size: 8g
     ports:
       - 5432:5432
     volumes:
