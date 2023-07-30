@@ -128,27 +128,19 @@ adicione a opção `--no_censorship` para o script `extract_dump.py`.
 
 ## Rodando
 
-### Instalando as Dependências
-
-Esse script depende de Python 3.7, de algumas bibliotecas e do software
-[aria2](https://aria2.github.io/). Depois de instalar o Python 3.7 e o aria2,
-instale as bibliotecas executando:
+### Usando docker
 
 ```bash
-pip install -r requirements.txt
+cp env.example .env
+# Altere as variáveis de ambiente conforme necessário
+docker compose up -d
+docker compose exec -it main ./run.sh
 ```
 
-### Executando
+O comando `run.sh` irá baixar os dados e importá-los no postgres que está rodando em um container.
 
-Então basta executar o script `run.sh` para baixar os arquivos necessários e
-fazer as conversões:
+Você poderá rodar etapas separadamente também (leia o script [run.sh](run.sh) para mais detalhes).
 
-```bash
-./run.sh
-```
-
-Você poderá rodar etapas separadamente também (leia o script [run.sh](run.sh)
-para mais detalhes).
 
 #### Agilizando o Download
 

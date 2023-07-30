@@ -3,8 +3,6 @@ services:
     image: postgres:15-bullseye
     env_file: .env
     shm_size: 8g
-    ports:
-      - 5432:5432
     volumes:
       - ./docker/data/postgres:/var/lib/postgresql/data
       - ./docker/postgresql.conf:/etc/postgresql/postgresql.conf
