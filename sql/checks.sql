@@ -635,3 +635,91 @@ WHERE
 -- -----------+-------------------------+------------------------+-----------------------
 --  49009023  | 2021221                 |                        | 2021221
 
+
+-- Erro em socio: nome do sócio em branco
+SELECT COUNT(*) FROM socio_orig WHERE COALESCE(nome, '') = '';
+--  count
+-- -------
+--   2087
+
+-- Erro em socio: CPF/CNPJ sócio em branco
+SELECT COUNT(*) FROM socio_orig WHERE COALESCE(cpf_cnpj, '') = '';
+--  count
+-- -------
+--  12928
+-- Detalhe: alguns dos sócios que não possuem `cpf_cnpj` preenchidos são empresas e existem empresas cujas razões
+-- sociais são iguais, por exemplo:
+SELECT * FROM socio WHERE nome = '1699516 ONTARIO INC';
+-- socio_uuid                        |
+-- empresa_uuid                      | 612d72ff-910a-5a6a-930e-5c811a8f0a9f
+-- cnpj_raiz                         | 07999552
+-- codigo_identificador              | 3
+-- nome                              | 1699516 ONTARIO INC
+-- cpf_cnpj                          |
+-- codigo_qualificacao               | 37
+-- data_entrada_sociedade            | 2006-07-03
+-- codigo_pais                       | 149
+-- representante_cpf_cnpj            | ***554628**
+-- representante                     | CINTIA VANNUCCI VAZ GUIMARAES
+-- representante_codigo_qualificacao | 17
+-- representante_uuid                | 6418151e-afd6-50cf-aa13-b7e58886c9a2
+-- codigo_faixa_etaria               |
+SELECT * FROM empresa WHERE razao_social = '1699516 ONTARIO INC';
+-- uuid                              | 7886b1c2-d9a7-5b13-bc7a-4a1d35ca05dc
+-- pessoa_uuid                       |
+-- codigo_natureza_juridica          | 2216
+-- codigo_qualificacao_responsavel   | 17
+-- codigo_porte                      | 5
+-- ente_responsavel_codigo_municipio |
+-- capital_social                    | 0.00
+-- cnpj_raiz                         | 08157912
+-- razao_social                      | 1699516 ONTARIO INC
+-- ente_responsavel_uf               |
+
+
+-- TODO: existe um caso na base limpa em que `nome` e `cpf_cnpj` são nulos conjuntamente, mas não na base original.
+-- Precisamos investigar e criar o check.
+SELECT COUNT(*) FROM socio WHERE COALESCE(nome, '') = '' AND COALESCE(cpf_cnpj, '') = '';
+--  count
+-- -------
+--      1
+SELECT COUNT(*) FROM socio_orig WHERE COALESCE(nome, '') = '' AND COALESCE(cpf_cnpj, '') = '';
+--  count
+-- -------
+--      0
+
+-- A maior parte dos casos de sócios com nome ou CPF/CNPJ em branco são do exterior, mas existem outros casos também:
+SELECT
+  s.codigo_qualificacao,
+  q.descricao,
+  COUNT(s.*)
+FROM socio_orig AS s
+LEFT JOIN qualificacao_socio AS q
+  ON s.codigo_qualificacao = q.codigo
+WHERE COALESCE(cpf_cnpj, '') = '' OR COALESCE(nome, '') = ''
+GROUP BY 1, 2
+ORDER BY 3 DESC;
+--  codigo_qualificacao |                             descricao                             | count
+-- ---------------------+-------------------------------------------------------------------+-------
+--                   37 | Sócio Pessoa Jurídica Domiciliado no Exterior                     |  9033
+--                   38 | Sócio Pessoa Física Residente no Exterior                         |  2587
+--                   16 | Presidente                                                        |  2034
+--                   72 | Diretor Residente ou Domiciliado no Exterior                      |   577
+--                   70 | Administrador Residente ou Domiciliado no Exterior                |   265
+--                   71 | Conselheiro de Administração Residente ou Domiciliado no Exterior |   189
+--                   74 | Sócio-Administrador Residente ou Domiciliado no Exterior          |   128
+--                   73 | Presidente Residente ou Domiciliado no Exterior                   |   106
+--                   22 | Sócio                                                             |    28
+--                   49 | Sócio-Administrador                                               |    28
+--                   75 | Fundador Residente ou Domiciliado no Exterior                     |    25
+--                   17 | Procurador                                                        |    10
+--                   10 | Diretor                                                           |     3
+--                   33 | Tesoureiro                                                        |     1
+--                    5 | Administrador                                                     |     1
+
+
+-- Possível erro em socio: cpf_cnpj = '***000000**' (deveria ser em branco ou é só coincidência?)
+SELECT COUNT(*) FROM socio_orig wHERE cpf_cnpj = '***000000**';
+--  count
+-- -------
+--   1123
