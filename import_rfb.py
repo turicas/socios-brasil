@@ -1,5 +1,6 @@
 """Import downloaded data to PostgreSQL"""
 import fnmatch
+import io
 import warnings
 import zipfile
 from functools import cached_property
@@ -22,6 +23,10 @@ class TableConfig:
     # archive (if not specified, all files in archive are used)
     encoding: str = "iso-8859-15"  # Encoding for CSV
     dialect: str = "excel-semicolon"  # Dialect for CSV
+
+    @classmethod
+    def get_dialect(cls, filename, fobj):
+        return self.dialect
 
     @classmethod
     def subclasses(cls):
@@ -76,12 +81,17 @@ class TableConfig:
             progress_bar.prefix = progress_bar.description = f"Importing {self.name} (ZIP {counter}/{len(files_to_extract)})"
             for file_info in files_infos:
                 # TODO: check if table already exists/has rows before importing?
+                dialect = self.dialect
+                if dialect is None:
+                    fobj_dialect = io.TextIOWrapper(zf.open(file_info.filename, mode="r"), encoding=self.encoding)
+                    dialect = self.get_dialect(file_info.filename, fobj_dialect)
+                    fobj_dialect.close()
                 fobj = zf.open(file_info.filename)
                 result = pgcopy.import_from_fobj(
                     fobj=NotNullWrapper(fobj),
                     table_name=self.name,
                     encoding=self.encoding,
-                    dialect=self.dialect,
+                    dialect=dialect,
                     schema=self.schema,
                     has_header=self.has_header,
                     unlogged=unlogged,
@@ -168,7 +178,7 @@ class RegimeTributario(TableConfig):
     # ser publicado e, com isso, a tabela `regime_tributario_orig` ficará
     # sempre vazia. Esses dados parecem estar disponíveis em:
     # <https://dadosabertos.rfb.gov.br/CNPJ/anual/>
-    dialect = "excel"
+    dialect = None  # Triggers `get_dialect`
     filename_patterns = (
         "Dados Abertos Sítio RFB*.zip",
         "Imunes e isentas.zip",
@@ -180,6 +190,13 @@ class RegimeTributario(TableConfig):
     inner_filename_pattern = "*.csv"
     name = "regime_tributario_orig"
     schema_filename = "regime_tributario.csv"
+
+    @classmethod
+    def get_dialect(cls, filename, fobj):
+        first_line = fobj.readline()
+        if first_line.count(",") > first_line.count(";"):
+            return "excel"
+        return "excel-semicolon"
 
 
 if __name__ == "__main__":

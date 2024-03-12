@@ -4,7 +4,10 @@ CREATE TABLE regime_tributario AS
     company_uuid(r.cnpj) AS empresa_uuid,
     r.ano::smallint AS ano,
     REGEXP_REPLACE(r.cnpj, '[./-]', '', 'g') AS cnpj,
-    REGEXP_REPLACE(r.cnpj_scp, '[./-]', '', 'g') AS cnpj_scp,
+    CASE
+      WHEN COALESCE(r.cnpj_scp, '') IN ('', '0') THEN NULL
+      ELSE REGEXP_REPLACE(r.cnpj_scp, '[./-]', '', 'g')
+    END AS cnpj_scp,
     r.forma_tributacao,
     qtd_escrituracoes::smallint AS qtd_escrituracoes
   FROM regime_tributario_orig AS r;
