@@ -128,18 +128,17 @@ adicione a opção `--no_censorship` para o script `extract_dump.py`.
 
 ## Rodando
 
-### Usando docker
+Você precisará do `docker compose` e `make` para rodar o projeto. Altere as variáveis de ambiente para cada serviço do
+compose conforme necessário em `docker/env/<serviço>.local`.
+
+Para iniciar o processo de download e transformação dos dados, execute:
 
 ```bash
-cp env.example .env
-# Altere as variáveis de ambiente conforme necessário
-docker compose up -d
-docker compose exec -it main ./run.sh
+make run
 ```
 
-O comando `run.sh` irá baixar os dados e importá-los no postgres que está rodando em um container.
-
-Você poderá rodar etapas separadamente também (leia o script [run.sh](run.sh) para mais detalhes).
+Para mais comandos, execute `make help`. Você poderá rodar etapas separadamente também (leia o script [run.sh](run.sh)
+para mais detalhes).
 
 
 #### Agilizando o Download

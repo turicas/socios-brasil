@@ -1,0 +1,7 @@
+# Environment variables for `db` service
+
+POSTGRES_HOST=db
+POSTGRES_PORT=5432
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=82bc8f85fbc2e1bc82b175a0afe8b2c0debe9a14023e3231
+POSTGRES_DB=postgres

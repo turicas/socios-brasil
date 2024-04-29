@@ -1,7 +1,10 @@
 services:
   db:
+    user: "${UID:-1000}:${GID:-1000}"
     image: postgres:15-bullseye
-    env_file: .env
+    env_file:
+      - "docker/env/db"
+      - "docker/env/db.local"
     shm_size: 8g
     volumes:
       - ./docker/data/db:/var/lib/postgresql/data
@@ -9,10 +12,13 @@ services:
     command: -c "config_file=/etc/postgresql/postgresql.conf"
 
   main:
+    user: "${UID:-1000}:${GID:-1000}"
     build:
       context: .
       dockerfile: Dockerfile
-    env_file: .env
+    env_file:
+      - "docker/env/main"
+      - "docker/env/main.local"
     volumes:
       - .:/app
     depends_on:

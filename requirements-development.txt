@@ -1,8 +1,0 @@
--r requirements.txt
-
-autoflake
-black
-flake8
-ipython
-isort
-pytest
