@@ -1,5 +1,4 @@
 import datetime
-import json
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import unquote, urljoin, urlparse, urlsplit
@@ -119,7 +118,7 @@ def main():
 
     receita = ReceitaFileFinder(mirror=args.mirror)
     apache_links = list(receita.apache_links)  # TODO: add option to choose between apache and ckan
-    #ckan_links = list(receita.ckan_links)  # TODO: add option to choose between apache and ckan
+    # ckan_links = list(receita.ckan_links)  # TODO: add option to choose between apache and ckan
     extraction_date = receita.apache_extraction_date  # TODO: add option to choose between apache and ckan
     date = extraction_date.strftime("%Y-%m-%d")
     print(f"Data da última extração: {date}")
@@ -127,7 +126,7 @@ def main():
     json_filename = Path(args.path_pattern.format(date=date, filename="resources.json"))
     if not json_filename.parent.exists():
         json_filename.parent.mkdir(parents=True)
-    #with json_filename.open(mode="w") as fobj:
+    # with json_filename.open(mode="w") as fobj:
     #    json.dump(receita.ckan_json, fobj)
     print(f"JSON salvo em {json_filename}")
     for filename, content in receita.apache_htmls:

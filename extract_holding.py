@@ -56,7 +56,10 @@ def main():
 
     cnpjs = set(holdings.keys())
     company_names_it = filter_csv(
-        args.empresa_filename, lambda row: row["cnpj"] in cnpjs, convert_function=convert_empresa, progress=True,
+        args.empresa_filename,
+        lambda row: row["cnpj"] in cnpjs,
+        convert_function=convert_empresa,
+        progress=True,
     )
     company_names = {row["cnpj"]: row["razao_social"] for row in company_names_it}
 

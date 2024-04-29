@@ -78,7 +78,9 @@ class TableConfig:
         progress_bar.total = uncompressed_size
         rows_imported = 0
         for counter, (zf, files_infos) in enumerate(files_to_extract, start=1):
-            progress_bar.prefix = progress_bar.description = f"Importing {self.name} (ZIP {counter}/{len(files_to_extract)})"
+            progress_bar.prefix = (
+                progress_bar.description
+            ) = f"Importing {self.name} (ZIP {counter}/{len(files_to_extract)})"
             for file_info in files_infos:
                 # TODO: check if table already exists/has rows before importing?
                 dialect = self.dialect
@@ -206,7 +208,9 @@ if __name__ == "__main__":
 
     table_classes = TableConfig.subclasses()
     parser = argparse.ArgumentParser()
-    parser.add_argument("--drop-if-exists", action="store_true", help="Drop table (if exists) before creating/importing data")
+    parser.add_argument(
+        "--drop-if-exists", action="store_true", help="Drop table (if exists) before creating/importing data"
+    )
     parser.add_argument("--unlogged", action="store_true")
     parser.add_argument("--access-method", choices=["heap", "columnar"], default="heap")
     parser.add_argument("--database-url")
