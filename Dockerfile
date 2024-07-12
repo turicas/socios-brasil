@@ -5,7 +5,7 @@ ARG DEV_BUILD
 WORKDIR /app
 
 RUN apt update \
-  && apt install -y aria2 libpq-dev postgresql-client python3-dev \
+  && apt install -y aria2 build-essential libpq-dev postgresql-client python3-dev wget \
   && apt purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
 
