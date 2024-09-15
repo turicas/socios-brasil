@@ -1,5 +1,6 @@
 import datetime
 from dataclasses import dataclass
+from itertools import zip_longest
 from pathlib import Path
 from urllib.parse import unquote, urljoin, urlparse, urlsplit
 
@@ -82,9 +83,39 @@ class ReceitaFileFinder:
 
     @property
     def apache_links(self):
-        links, self.apache_htmls = list(apache_file_list(self.apache_list_url, recursive=True))
-        self.apache_extraction_date = max(link.updated_at for link in links).date()
-        yield from self._fix_mirror_url(links, self.apache_extraction_date)
+        # Primeiro, lista arquivos do nível inicial
+        links, htmls = apache_file_list(self.apache_list_url, recursive=False)
+        regime_tributario_url, dados_url = None, None
+        final_links, final_htmls = [], []
+        for link, html in zip_longest(links, htmls):
+            if link.filename == "dados_abertos_cnpj":
+                dados_url = link.url
+                continue
+            elif link.filename == "regime_tributario":
+                regime_tributario_url = link.url
+                continue
+            final_links.append(link)
+            final_htmls.append(html)
+
+        # Depois, lista arquivos de regime tributário
+        regime_links, regime_htmls = apache_file_list(regime_tributario_url, recursive=True)
+        regime_htmls[0] = ("regime_tributario.html", regime_htmls[0][1])
+        assert len(regime_htmls) == 1, f"Tamanho inesperado (regime_htmls): {len(regime_htmls)}"
+        final_links.extend(regime_links)
+        final_htmls.append(regime_htmls[0])
+
+        # Finalmente, pega links para os arquivos ZIP dos dados principais
+        dados_main_links, dados_main_htmls = apache_file_list(dados_url, recursive=False)
+        dados_main_links.sort(key=lambda link: link.filename)
+        dados_link = dados_main_links[-1]  # TODO: adicionar opção para escolher data
+        dados_links, dados_htmls = apache_file_list(dados_link.url, recursive=True)
+        assert len(dados_htmls) == 1, f"Tamanho inesperado (dados_htmls): {len(dados_htmls)}"
+        final_links.extend(dados_links)
+        final_htmls.append(dados_htmls[0])
+
+        self.apache_htmls = final_htmls
+        self.apache_extraction_date = max(link.updated_at for link in final_links).date()
+        yield from self._fix_mirror_url(final_links, self.apache_extraction_date)
 
     @property
     def ckan_links(self):
@@ -136,14 +167,14 @@ def main():
         print(f"{filename} salvo em {html_filename}")
 
     downloader = subclasses[args.downloader]()
-    # TODO: if recursive, will not save in correct folder
     downloader.add_many(
         [
             Download(
                 url=link.url,
                 filename=args.path_pattern.format(date=date, filename=link.filename),
             )
-            for link in apache_links  # TODO: add option to choose between apache and ckan
+            for link in apache_links
+            # TODO: add option to choose between apache and ckan
         ]
     )
     downloader.run()
