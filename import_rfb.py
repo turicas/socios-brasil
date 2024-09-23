@@ -176,17 +176,13 @@ class QualificacaoSocio(TableConfig):
 
 
 class RegimeTributario(TableConfig):
-    # XXX: após a mudança do dataset para o dados.gov.br esse arquivo parou de
-    # ser publicado e, com isso, a tabela `regime_tributario_orig` ficará
-    # sempre vazia. Esses dados parecem estar disponíveis em:
-    # <https://dadosabertos.rfb.gov.br/CNPJ/anual/>
     dialect = None  # Triggers `get_dialect`
     filename_patterns = (
         "Dados Abertos Sítio RFB*.zip",
         "Imunes e isentas.zip",
-        "Lucro Arbitrado.zip",
-        "Lucro Presumido.zip",
-        "Lucro Real.zip",
+        "Lucro Arbitrado*.zip",
+        "Lucro Presumido*.zip",  # Pode vir como "Lucro Presumido 1.zip"
+        "Lucro Real*.zip",
     )
     has_header = True
     inner_filename_pattern = "*.csv"
