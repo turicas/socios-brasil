@@ -13,8 +13,8 @@ clean: stop				# Stop and clean orphan containers
 fix-permissions:		# Fix volume permissions on host machine
 	userID=$${UID:-1000}
 	groupID=$${UID:-1000}
-	mkdir -p docker/data/main docker/data/db
-	chown -R $$userID:$$groupID docker/data/main docker/data/db
+	mkdir -p docker/data/main docker/data/db16
+	chown -R $$userID:$$groupID docker/data/main docker/data/db16
 	touch docker/env/main.local docker/env/db.local
 
 help:					# List all make commands
