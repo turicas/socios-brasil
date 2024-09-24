@@ -46,7 +46,7 @@ CREATE TABLE empresa AS
     FROM empresa_orig
     WHERE
       razao_social IS NOT NULL
-      OR codigo_natureza_juridica = 0
+      AND codigo_natureza_juridica <> 0
   ) AS e
     LEFT JOIN municipio_uf AS m
       ON e.ente_responsavel_uf = m.uf AND e.ente_responsavel_municipio = m.nome;
