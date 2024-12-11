@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS estabelecimento;
+DROP TABLE IF EXISTS estabelecimento CASCADE;
 CREATE TABLE estabelecimento AS
   SELECT
     company_branch_uuid(RIGHT('00000000000000' || cnpj_raiz || cnpj_ordem || cnpj_dv, 14)) AS "uuid",

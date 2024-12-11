@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS regime_tributario;
+DROP TABLE IF EXISTS regime_tributario CASCADE;
 CREATE TABLE regime_tributario AS
   SELECT
     company_uuid(r.cnpj) AS empresa_uuid,

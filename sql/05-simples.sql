@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS simples;
+DROP TABLE IF EXISTS simples CASCADE;
 CREATE TABLE simples AS
   SELECT
     company_uuid(cnpj_raiz || '000100') AS empresa_uuid,

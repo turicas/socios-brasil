@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS estabelecimento_cnae;
+DROP TABLE IF EXISTS estabelecimento_cnae CASCADE;
 CREATE TABLE estabelecimento_cnae AS
   SELECT
     e.cnpj,

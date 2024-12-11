@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS empresa;
+DROP TABLE IF EXISTS empresa CASCADE;
 CREATE TABLE empresa AS
   SELECT
     e."uuid",
