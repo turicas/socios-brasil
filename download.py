@@ -9,6 +9,21 @@ from lxml.html import document_fromstring
 from rows.utils.download import Download, Downloader
 
 
+def parse_iso_date(value):
+    """
+    >>> print(parse_iso_date(""))
+    None
+    >>> print(parse_iso_date(None))
+    None
+    >>> print(parse_iso_date("2024-12-01"))
+    datetime.date(2024, 12, 1)
+    """
+    value = str(value or "").strip()
+    if not value:
+        return None
+    return datetime.datetime.strptime(value, "%Y-%m-%d").date()
+
+
 @dataclass
 class Link:
     is_folder: bool
@@ -69,8 +84,8 @@ def apache_file_list(main_url, recursive=False):
 
 
 class ReceitaFileFinder:
-    ckan_url = "https://dados.gov.br/api/publico/conjuntos-dados/cadastro-nacional-da-pessoa-jurdica---cnpj"
-    apache_list_url = "https://dadosabertos.rfb.gov.br/CNPJ/"
+    url_arquivos_principais = "https://arquivos.receitafederal.gov.br/dados/cnpj/dados_abertos_cnpj/"
+    url_regime_tributario = "https://arquivos.receitafederal.gov.br/dados/cnpj/regime_tributario/"
 
     def __init__(self, mirror=False):
         self.mirror = mirror
@@ -82,101 +97,89 @@ class ReceitaFileFinder:
             yield link
 
     @property
-    def apache_links(self):
-        # Primeiro, lista arquivos do nível inicial
-        links, htmls = apache_file_list(self.apache_list_url, recursive=False)
-        regime_tributario_url, dados_url = None, None
-        final_links, final_htmls = [], []
-        for link, html in zip_longest(links, htmls):
-            if link.filename == "dados_abertos_cnpj":
-                dados_url = link.url
+    def datas(self) -> list[datetime.date]:
+        """Retorna datas de extração para as quais é possível baixar os dados"""
+        links, htmls = apache_file_list(self.url_arquivos_principais, recursive=False)
+        links.sort(key=lambda link: link.filename, reverse=True)
+        # Cada pasta possui como nome o ano e o mês (YYYY-MM)
+        resultado = []
+        for link in links:
+            if not link.is_folder:
+                print(f"WARNING: encontrado arquivo na pasta raiz (não esperado): {link}")
                 continue
-            elif link.filename == "regime_tributario":
-                regime_tributario_url = link.url
-                continue
-            final_links.append(link)
-            final_htmls.append(html)
+            resultado.append(parse_iso_date(f"{Path(link.url).name}-01"))
+        return resultado
 
-        # Depois, lista arquivos de regime tributário
-        regime_links, regime_htmls = apache_file_list(regime_tributario_url, recursive=True)
-        regime_htmls[0] = ("regime_tributario.html", regime_htmls[0][1])
-        assert len(regime_htmls) == 1, f"Tamanho inesperado (regime_htmls): {len(regime_htmls)}"
-        final_links.extend(regime_links)
-        final_htmls.append(regime_htmls[0])
+    def links_arquivos_principais(self, data: datetime.date):
+        """Lista de links para os arquivos principais (empresa, estabelecimento, sócio etc.)"""
+        base_url = self.url_arquivos_principais
+        url = base_url + ("/" if base_url[0] != "/" else "") + data.strftime("%Y-%m") + "/"
+        links, htmls = apache_file_list(url, recursive=False)
+        links.sort(key=lambda link: link.filename, reverse=True)
+        return links
 
-        # Finalmente, pega links para os arquivos ZIP dos dados principais
-        dados_main_links, dados_main_htmls = apache_file_list(dados_url, recursive=False)
-        dados_main_links.sort(key=lambda link: link.filename)
-        dados_link = dados_main_links[-1]  # TODO: adicionar opção para escolher data
-        dados_links, dados_htmls = apache_file_list(dados_link.url, recursive=True)
-        assert len(dados_htmls) == 1, f"Tamanho inesperado (dados_htmls): {len(dados_htmls)}"
-        final_links.extend(dados_links)
-        final_htmls.append(dados_htmls[0])
-
-        self.apache_htmls = final_htmls
-        self.apache_extraction_date = max(link.updated_at for link in final_links).date()
-        yield from self._fix_mirror_url(final_links, self.apache_extraction_date)
-
-    @property
-    def ckan_links(self):
-        response = requests.get(self.ckan_url)
-        data = self.ckan_json = response.json()
-        links = []
-        for resource in data["resources"]:
-            links.append(
-                Link(
-                    is_folder=False,
-                    url=resource["url"],
-                    filename=Path(urlsplit(resource["url"]).path).name,
-                    updated_at=datetime.datetime.fromisoformat(resource["created"].split(".")[0]),
-                    size=resource["size"],
-                    description=resource["description"],
-                )
-            )
-        self.ckan_extraction_date = max(link.updated_at for link in links).date()
-        yield from self._fix_mirror_url(links, self.ckan_extraction_date)
+    def links_regime_tributario(self):
+        """Lista de links para regime tributário"""
+        links, htmls = apache_file_list(self.url_regime_tributario, recursive=True)
+        links.sort(key=lambda link: link.updated_at, reverse=True)
+        return links
 
 
 def main():
     import argparse
+    import sys
 
     subclasses = Downloader.subclasses()
     parser = argparse.ArgumentParser()
-    parser.add_argument("--path-pattern", default="data/download/{date}/{filename}")
-    parser.add_argument("--downloader", choices=list(subclasses.keys()), default="aria2c")
-    parser.add_argument("--mirror", action="store_true")
+    parser.add_argument("--date", "-d", type=parse_iso_date, help="Download for a specific date")
+    parser.add_argument("--path-pattern", "-p", type=Path, default=Path("data/download/{date}/{filename}"))
+    parser.add_argument("--downloader", "-D", type=str, choices=list(subclasses.keys()), default="aria2c")
+    parser.add_argument("--mirror", "-m", action="store_true")
     args = parser.parse_args()
+    data_selecionada = args.date
+    path_pattern = str(args.path_pattern.absolute())
 
     receita = ReceitaFileFinder(mirror=args.mirror)
-    apache_links = list(receita.apache_links)  # TODO: add option to choose between apache and ckan
-    # ckan_links = list(receita.ckan_links)  # TODO: add option to choose between apache and ckan
-    extraction_date = receita.apache_extraction_date  # TODO: add option to choose between apache and ckan
-    date = extraction_date.strftime("%Y-%m-%d")
-    print(f"Data da última extração: {date}")
+    datas_disponiveis = list(receita.datas)
+    if not data_selecionada:
+        data_selecionada = datas_disponiveis[0]
+    elif data_selecionada not in datas_disponiveis:
+        print(
+            "ERRO: data selecionada ({data_selecionada}) não é uma das disponíveis: {', '.join(datas_disponiveis)}",
+            file=sys.stderr,
+        )
+        exit(1)
 
-    json_filename = Path(args.path_pattern.format(date=date, filename="resources.json"))
-    if not json_filename.parent.exists():
-        json_filename.parent.mkdir(parents=True)
-    # with json_filename.open(mode="w") as fobj:
-    #    json.dump(receita.ckan_json, fobj)
-    print(f"JSON salvo em {json_filename}")
-    for filename, content in receita.apache_htmls:
-        html_filename = Path(args.path_pattern.format(date=date, filename=filename))
-        with html_filename.open(mode="w") as fobj:
-            fobj.write(content)
-        print(f"{filename} salvo em {html_filename}")
+    links_principais = list(receita.links_arquivos_principais(data_selecionada))
+    datas_principais = set([link.updated_at.strftime("%Y-%m-%d") for link in links_principais])
+    if len(datas_principais) == 1 and list(datas_principais)[0][:-3] == data_selecionada.strftime("%Y-%m"):
+        data_principais = parse_iso_date(list(datas_principais)[0])
+    else:
+        data_principais = data_selecionada
+    links_regime_tributario = list(receita.links_regime_tributario())
+    data_regime_tributario = links_regime_tributario[0].updated_at.strftime("%Y-%m-%d")
 
-    downloader = subclasses[args.downloader]()
-    downloader.add_many(
-        [
+    print(f"Data da última extração: {datas_disponiveis[0].strftime('%Y-%m')}")
+    print(f"Baixando para data (arquivos principais): {data_selecionada}")
+    print(f"Baixando para data (regime tributário): {data_regime_tributario}")
+
+    downloads = []
+    for link in links_principais:
+        downloads.append(
             Download(
                 url=link.url,
-                filename=args.path_pattern.format(date=date, filename=link.filename),
+                filename=path_pattern.format(date=data_principais, filename=link.filename),
             )
-            for link in apache_links
-            # TODO: add option to choose between apache and ckan
-        ]
-    )
+        )
+    for link in links_regime_tributario:
+        downloads.append(
+            Download(
+                url=link.url,
+                filename=path_pattern.format(date=data_principais, filename=f"{data_regime_tributario}_{link.filename}"),
+            )
+        )
+    downloader = subclasses[args.downloader]()
+    downloader.add_many(downloads)
     downloader.run()
 
 

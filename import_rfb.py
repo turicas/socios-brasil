@@ -178,11 +178,11 @@ class QualificacaoSocio(TableConfig):
 class RegimeTributario(TableConfig):
     dialect = None  # Triggers `get_dialect`
     filename_patterns = (
-        "Dados Abertos Sítio RFB*.zip",
-        "Imunes e isentas.zip",
-        "Lucro Arbitrado*.zip",
-        "Lucro Presumido*.zip",  # Pode vir como "Lucro Presumido 1.zip"
-        "Lucro Real*.zip",
+        "*_Dados Abertos Sítio RFB*.zip",
+        "*_Imunes e isentas.zip",
+        "*_Lucro Arbitrado*.zip",
+        "*_Lucro Presumido*.zip",  # Pode vir como "Lucro Presumido 1.zip"
+        "*_Lucro Real*.zip",
     )
     has_header = True
     inner_filename_pattern = "*.csv"
