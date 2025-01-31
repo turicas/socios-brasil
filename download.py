@@ -1,4 +1,5 @@
 import datetime
+import re
 from dataclasses import dataclass
 from itertools import zip_longest
 from pathlib import Path
@@ -107,7 +108,11 @@ class ReceitaFileFinder:
             if not link.is_folder:
                 print(f"WARNING: encontrado arquivo na pasta raiz (não esperado): {link}")
                 continue
-            resultado.append(parse_iso_date(f"{Path(link.url).name}-01"))
+            folder_name = Path(link.url).name
+            if re.match("^[0-9]{4}-[0-9]{2}$", folder_name):
+                resultado.append(parse_iso_date(f"{folder_name}-01"))
+            else:
+                print(f"WARNING: ignorando pasta que não é data: {repr(folder_name)}")
         return resultado
 
     def links_arquivos_principais(self, data: datetime.date):
