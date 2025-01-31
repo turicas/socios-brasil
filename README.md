@@ -48,9 +48,7 @@ aqui](https://github.com/turicas/socios-brasil/issues/20)).
 
 ### Saída
 
-Além de extrair os dados do arquivo origingal, o script gera uma nova tabela
-contendo as empresas que são sócias de outras empresas (para facilitar buscas
-de *holdings*).
+A saída do processamento dos dados são tabelas em um banco postgres, com os dados já tratados.
 
 Caso você não queira/possa rodar o script, **[acesse diretamente os dados
 convertidos no Brasil.IO](https://brasil.io/dataset/socios-brasil)**.
@@ -59,30 +57,36 @@ Se esse programa e/ou os dados resultantes foram úteis a você ou à sua empres
 considere [fazer uma doação ao projeto Brasil.IO](https://brasil.io/doe), que é
 mantido voluntariamente.
 
-Como resultado temos os seguintes arquivos:
+Como resultado temos as seguintes tabelas:
 
-- `empresa.csv.gz`: cadastro das empresas;
-- `socio.csv.gz`: cadastro dos sócios;
-- `cnae-secundaria.csv.gz`: lista de CNAEs secundárias;
-- `holding.csv.gz`: cadastro das empresas que são sócias de outras
-  empresas (é o arquivo `socio.csv.gz` filtrado por sócios do tipo PJ).
+- `cnae`: lista de códigos e valores possíveis para os campos `cnae_principal` e `cnae_secundaria` que aparecem na
+  tabela `estabelecimento`. 1.359 registros.
+- `empresa`: cadastro das empresas (tem a razão social, mas não tem o CNPJ, que está em `estabelecimento`). 60.294.480
+  registros.
+- `estabelecimento`: dados sobre matriz e filiais de empresas, contém endereço, CNPJ, nome fantasia etc. 63.333.645
+  registros.
+- `motivo_situacao_cadastral`: lista de códigos e valores possíveis para o campo de situação cadastral que aparece na
+  tabela `estabelecimento`. 61 registros.
+- `municipio_uf`: lista de códigos de municípios, com nome e UF, para os campos que aparecem nas tabelas `empresa` e
+  `estabelecimento`. 5.571 registros.
+- `natureza_juridica`: lista de códigos e valores possíveis para o campo de natureza jurídica que aparece na tabela
+  `empresa`. 90 registros.
+- `pais`: lista de códigos e valores possíveis para o campo de país que aparece nas tabelas `estabelecimento` e
+  `socio`. 255 registros.
+- `qualificacao_socio`: lista de códigos e valores possíveis para o campo de qualificação do sócio, que aparece nas
+  tabelas `socio` e `empresa`. 68 registros.
+- `regime_tributario`: lista de regimes tributários de algumas empresas. 9.506.257 registros.
+- `simples`: informações se a empresa é optante pelo simples e pelo MEI, com datas de inclusão e exclusão. 41.093.715
+  registros.
+- `socio`: lista de sócios para cada empresa. Nota: para empresas individuais (como EI, MEI, EIRELI) não existe um
+  registro de sócio (nesses casos, as únicas informações sobre a pessoa estão na razão social da empresa). 24.933.519
+  registros.
 
-Além disso, os arquivos contidos nas pastas [schema](schema/) e
-[schema-full](schema-full/) podem te ajudar a importar os dados para um banco
-de dados (veja comandos para [SQLite](#sqlite) e [PostgreSQL](#postgresql)
-abaixo).
+> Nota 1: os números de registros podem variar e de versão para versão da base de dados; os que estão acima são apenas
+> para referência e foram extraídos da versão `2024-11`.
 
-> Nota 1: a extensão `.gz` quer dizer que o arquivo foi compactado usando gzip.
-> Para descompactá-lo execute o comando `gunzip arquivo.gz` (**não é necessário
-> descompactá-los** caso você siga as instruções de importação em
-> [SQLite](#sqlite) e [PostgreSQL](#postgresql)).
-
-> Nota 2: a codificação de caracteres original é ISO-8859-15, mas o script gera
-> os arquivos CSV em UTF-8.
-
-> Nota 3: se você estava usando os dados no formato anterior, veja como
-> converter os novos para o padrão antigo no arquivo
-> `sql/04-create-old-views.sql`.
+> Nota 2: se você estava usando os dados no formato anterior, veja como converter os novos para o padrão antigo no
+> arquivo `sql/04-create-old-views.sql`.
 
 
 ### Privacidade
@@ -178,56 +182,6 @@ rapidamente em bancos SQLite e PostgreSQL.
 > Nota 2: caso utilize a opção `--no_censorship`, utilize os arquivos da pasta
 > `schema-full` em vez da pasta `schema`, pois a versão "sem censura" possui
 > mais colunas.
-
-### SQLite
-
-Instale a CLI da rows e a versão de desenvolvimento da biblioteca rodando
-(requer Python 3.7+):
-
-```bash
-pip install rows[cli]
-pip install -U https://github.com/turicas/rows/archive/develop.zip
-```
-
-Agora, com os arquivos na pasta `data/output` basta executar os seguintes
-comandos:
-
-```bash
-DB_NAME="data/output/socios-brasil.sqlite"
-rows csv2sqlite --schemas=schema/empresa.csv data/output/empresa.csv.gz "$DB_NAME"
-rows csv2sqlite --schemas=schema/holding.csv data/output/holding.csv.gz "$DB_NAME"
-rows csv2sqlite --schemas=schema/socio.csv data/output/socio.csv.gz "$DB_NAME"
-rows csv2sqlite --schemas=schema/cnae-secundaria.csv data/output/cnae-secundaria.csv.gz "$DB_NAME"
-```
-
-Pegue um café, aguarde alguns minutos e depois desfrute do banco de dados em
-`data/output/socios-brasil.sqlite`. :)
-
-
-### PostgreSQL
-
-Instale a CLI da rows, as dependências do PostgreSQL e a versão de
-desenvolvimento da biblioteca rodando (requer Python 3.7+):
-
-```bash
-pip install rows[cli]
-pip install rows[postgresql]
-pip install -U https://github.com/turicas/rows/archive/develop.zip
-```
-
-Agora, com os arquivos na pasta `data/output` basta executar os seguintes
-comandos (não esqueça de preencher a variável `POSTGRESQL_URI` corretamente):
-
-```bash
-POSTGRESQL_URI="postgres://<user>:<pass>@<host>:<port>/<dbname>"  # PREENCHA!
-rows pgimport --schema=schema/empresa.csv data/output/empresa.csv.gz $POSTGRESQL_URI empresa
-rows pgimport --schema=schema/socio.csv data/output/empresa-socia.csv.gz $POSTGRESQL_URI empresa_socia
-rows pgimport --schema=schema/socio.csv data/output/socio.csv.gz $POSTGRESQL_URI socio
-rows pgimport --schema=schema/cnae-secundaria.csv data/output/cnae-secundaria.csv.gz $POSTGRESQL_URI cnae_secundaria
-```
-
-Pegue um café, aguarde alguns minutos e depois desfrute do banco de dados em
-`$POSTGRESQL_URI`. :)
 
 
 ## Outras Implementações
