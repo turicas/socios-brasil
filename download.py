@@ -149,8 +149,9 @@ def main():
     if not data_selecionada:
         data_selecionada = datas_disponiveis[0]
     elif data_selecionada not in datas_disponiveis:
+        disponiveis_str = ", ".join(map(str, datas_disponiveis))
         print(
-            "ERRO: data selecionada ({data_selecionada}) não é uma das disponíveis: {', '.join(datas_disponiveis)}",
+            f"ERRO: data selecionada ({data_selecionada}) não é uma das disponíveis: {disponiveis_str}",
             file=sys.stderr,
         )
         exit(1)
