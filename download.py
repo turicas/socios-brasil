@@ -184,7 +184,12 @@ def main():
                 filename=path_pattern.format(date=data_principais, filename=f"{data_regime_tributario}_{link.filename}"),
             )
         )
-    downloader = subclasses[args.downloader]()
+    DownloaderClass = subclasses[args.downloader]
+    kwargs = {}
+    if DownloaderClass.__name__ == "Aria2cDownloader":
+        kwargs["max_concurrent_downloads"] = 2
+        kwargs["max_connections_per_download"] = 2
+    downloader = DownloaderClass(max_tries=len(downloads) * 5, **kwargs)
     downloader.add_many(downloads)
     downloader.run()
 
