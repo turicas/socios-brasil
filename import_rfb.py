@@ -6,7 +6,7 @@ import zipfile
 from functools import cached_property
 from pathlib import Path
 
-from rows.plugins.postgresql import PostgresCopy, pg_execute_psql
+from rows import plugins
 from rows.utils import NotNullWrapper, ProgressBar, load_schema, subclasses
 
 SCHEMA_PATH = Path(__file__).parent / "headers" / "novos"
@@ -53,7 +53,7 @@ class TableConfig:
         progress_bar = ProgressBar(pre_prefix=desc_drop if drop else desc_import, prefix="", unit="bytes")
 
         if drop:
-            pg_execute_psql(database_url, f'DROP TABLE IF EXISTS "{self.name}"')
+            plugins.postgresql.pg_execute_psql(database_url, f'DROP TABLE IF EXISTS "{self.name}"')
             progress_bar.prefix = progress_bar.description = desc_import
 
         # First, select all zip files and inner files to load
@@ -73,7 +73,7 @@ class TableConfig:
             files_to_extract.append((zf, files_infos))
             uncompressed_size += sum(file_info.file_size for file_info in files_infos)
 
-        pgcopy = PostgresCopy(database_url)
+        pgcopy = plugins.postgresql.PostgresCopy(database_url)
         progress_bar.prefix = progress_bar.description = f"Importing {self.name} (ZIP 0/{len(files_to_extract)})"
         progress_bar.total = uncompressed_size
         rows_imported = 0
