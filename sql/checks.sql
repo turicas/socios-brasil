@@ -912,3 +912,28 @@ LIMIT 50;
 -- 33000167008862 |                         2 | 20051103                | 19660928              | 1921700
 -- 33000167009087 |                         8 | 20040105                | 19660928              | 1921700
 -- 33000167014323 |                         2 | 20051103                | 19660928              | 1921700
+
+
+-- Erro: sócios não estrangeiros possuem nome em branco
+SELECT COUNT(*)
+FROM socio_orig
+WHERE codigo_identificador <> 3 AND nome IS NULL;
+--  count
+-- -------
+--   1839
+
+
+-- Check: sócios não estrangeiros sempre possuem documento em branco
+SELECT COUNT(*)
+FROM socio_orig
+WHERE codigo_identificador = 3 AND cpf_cnpj IS NULL;
+SELECT COUNT(*)
+FROM socio_orig
+WHERE codigo_identificador = 3;
+--  count
+-- -------
+--  12826
+--
+--  count
+-- -------
+--  12826
