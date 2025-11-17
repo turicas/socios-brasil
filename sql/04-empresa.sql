@@ -5,7 +5,7 @@ CREATE TABLE empresa AS
     CASE
       WHEN codigo_natureza_juridica = 2135 AND TRIM(razao_social) ~ ' [0-9.-]{11,14}$' THEN
         person_uuid(
-          RIGHT(TRIM(razao_social), 11),
+          REGEXP_REPLACE(REGEXP_REPLACE(razao_social, '.* ([0-9.-]{11,14})$', '\1'), '[.-]+', '', 'g'),
           TRIM(REGEXP_REPLACE(TRIM(razao_social), '[,-]? ?(CPF)? ?(N ?|NO ?)?[:.-]? ?[0-9.-]{11,14}$', ' '))
         )
       ELSE NULL
