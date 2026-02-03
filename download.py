@@ -37,14 +37,14 @@ class Link:
     description: str = None
 
 
-def apache_file_list(main_url, recursive=False):
+def apache_file_list(main_url: str, recursive: bool = False, timeout: float = 30.0):
     # TODO: add option to get filename from URL or <a>/text()
     main_path = Path(urlparse(main_url).path)
     links, htmls = [], []
     stack = [("index.html", main_url)]
     while stack:
         filename, listing_url = stack.pop(0)
-        response = requests.get(listing_url)
+        response = requests.get(listing_url, timeout=timeout)
         htmls.append((filename, response.text))
         tree = document_fromstring(response.text)
         for line in tree.xpath("//table//tr"):
@@ -88,8 +88,9 @@ def apache_file_list(main_url, recursive=False):
 
 class BaseReceitaFileFinder:
 
-    def __init__(self, mirror=False):
+    def __init__(self, mirror: bool = False, timeout: float = 30.0):
         self.mirror = mirror
+        self.timeout = timeout
 
     def _fix_mirror_url(self, links, extraction_date):
         for link in links:
@@ -158,7 +159,7 @@ class ReceitaFileFinderNextCloud(BaseReceitaFileFinder):
             """).strip()
         list_url = urljoin(self.base_url, pasta)
         headers = {"Depth": str(depth), "Content-Type": "application/xml"}
-        response = requests.request(method="PROPFIND", url=list_url, headers=headers, data=body)
+        response = requests.request(method="PROPFIND", url=list_url, headers=headers, data=body, timeout=self.timeout)
         response.raise_for_status()
         ns = {"d": "DAV:"}
         root = ET.fromstring(response.content)
@@ -211,10 +212,10 @@ def main():
 
     subclasses = Downloader.subclasses()
     parser = argparse.ArgumentParser()
-    parser.add_argument("--date", "-d", type=parse_iso_date, help="Download for a specific date")
-    parser.add_argument("--path-pattern", "-p", type=Path, default=Path("data/download/{date}/{filename}"))
-    parser.add_argument("--downloader", "-D", type=str, choices=list(subclasses.keys()), default="aria2c")
-    parser.add_argument("--mirror", "-m", action="store_true")
+    parser.add_argument("-d", "--date", type=parse_iso_date, help="Download for a specific date")
+    parser.add_argument("-p", "--path-pattern", type=Path, default=Path("data/download/{date}/{filename}"))
+    parser.add_argument("-D", "--downloader", type=str, choices=list(subclasses.keys()), default="aria2c")
+    parser.add_argument("-m", "--mirror", action="store_true")
     args = parser.parse_args()
     data_selecionada = args.date
     path_pattern = str(args.path_pattern.absolute())
@@ -224,7 +225,7 @@ def main():
     if not data_selecionada:
         data_selecionada = datas_disponiveis[0]
     elif data_selecionada not in datas_disponiveis:
-        disponiveis_str = ", ".join(map(str, datas_disponiveis))
+        disponiveis_str = " ".join(map(str, datas_disponiveis))
         print(
             f"ERRO: data selecionada ({data_selecionada}) não é uma das disponíveis: {disponiveis_str}",
             file=sys.stderr,
