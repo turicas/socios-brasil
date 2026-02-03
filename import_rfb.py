@@ -27,7 +27,7 @@ class TableConfig:
 
     @classmethod
     def get_dialect(cls, filename, fobj):
-        return self.dialect
+        return cls.dialect
 
     @classmethod
     def subclasses(cls):
