@@ -3,8 +3,10 @@ services:
     user: "${UID:-1000}:${GID:-1000}"
     image: postgres:16-bookworm
     env_file:
-      - "docker/env/db"
-      - "docker/env/db.local"
+      - path: "docker/env/db"
+        required: true
+      - path: "docker/env/db.local"
+        required: false
     shm_size: 8g
     volumes:
       - ${PWD}/docker/data/db:/var/lib/postgresql/data
@@ -21,8 +23,10 @@ services:
       context: .
       dockerfile: Dockerfile
     env_file:
-      - "docker/env/main"
-      - "docker/env/main.local"
+      - path: "docker/env/main"
+        required: true
+      - path: "docker/env/main.local"
+        required: false
     volumes:
       - .:/app
     depends_on:
