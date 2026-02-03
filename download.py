@@ -1,8 +1,11 @@
 import datetime
 import re
 from dataclasses import dataclass
+from email.utils import parsedate_to_datetime
 from pathlib import Path
+from textwrap import dedent
 from urllib.parse import unquote, urljoin, urlparse
+from xml.etree import ElementTree as ET
 
 import requests
 from lxml.html import document_fromstring
@@ -83,9 +86,7 @@ def apache_file_list(main_url, recursive=False):
     return links, htmls
 
 
-class ReceitaFileFinder:
-    url_arquivos_principais = "https://arquivos.receitafederal.gov.br/dados/cnpj/dados_abertos_cnpj/"
-    url_regime_tributario = "https://arquivos.receitafederal.gov.br/dados/cnpj/regime_tributario/"
+class BaseReceitaFileFinder:
 
     def __init__(self, mirror=False):
         self.mirror = mirror
@@ -99,11 +100,9 @@ class ReceitaFileFinder:
     @property
     def datas(self) -> list[datetime.date]:
         """Retorna datas de extração para as quais é possível baixar os dados"""
-        links, htmls = apache_file_list(self.url_arquivos_principais, recursive=False)
-        links.sort(key=lambda link: link.filename, reverse=True)
         # Cada pasta possui como nome o ano e o mês (YYYY-MM)
         resultado = []
-        for link in links:
+        for link in self.pastas():
             if not link.is_folder:
                 print(f"WARNING: encontrado arquivo na pasta raiz (não esperado): {link}")
                 continue
@@ -113,6 +112,16 @@ class ReceitaFileFinder:
             else:
                 print(f"WARNING: ignorando pasta que não é data: {repr(folder_name)}")
         return resultado
+
+
+class ReceitaFileFinderApache(BaseReceitaFileFinder):
+    url_arquivos_principais = "https://arquivos.receitafederal.gov.br/dados/cnpj/dados_abertos_cnpj/"
+    url_regime_tributario = "https://arquivos.receitafederal.gov.br/dados/cnpj/regime_tributario/"
+
+    def pastas(self):
+        links, htmls = apache_file_list(self.url_arquivos_principais, recursive=False)
+        links.sort(key=lambda link: link.filename, reverse=True)
+        return links
 
     def links_arquivos_principais(self, data: datetime.date):
         """Lista de links para os arquivos principais (empresa, estabelecimento, sócio etc.)"""
@@ -126,6 +135,73 @@ class ReceitaFileFinder:
         """Lista de links para regime tributário"""
         links, htmls = apache_file_list(self.url_regime_tributario, recursive=True)
         links.sort(key=lambda link: link.updated_at, reverse=True)
+        return links
+
+
+class ReceitaFileFinderNextCloud(BaseReceitaFileFinder):
+    """Lista arquivos disponíveis para baixar na instância do NextCloud da Receita Federal"""
+
+    base_url = "https://arquivos.receitafederal.gov.br/public.php/dav/files/gn672Ad4CF8N6TK/"
+
+    def lista_arquivos(self, pasta, depth=1):
+        body = dedent("""
+            <?xml version="1.0"?>
+            <d:propfind xmlns:d="DAV:">
+              <d:prop>
+                <d:displayname/>
+                <d:getcontentlength/>
+                <d:getcontenttype/>
+                <d:resourcetype/>
+                <d:getlastmodified/>
+              </d:prop>
+            </d:propfind>
+            """).strip()
+        list_url = urljoin(self.base_url, pasta)
+        headers = {"Depth": str(depth), "Content-Type": "application/xml"}
+        response = requests.request(method="PROPFIND", url=list_url, headers=headers, data=body)
+        response.raise_for_status()
+        ns = {"d": "DAV:"}
+        root = ET.fromstring(response.content)
+        props_mapping = {"displayname": "filename", "getcontentlength": "size", "getlastmodified": "updated_at"}
+        arquivos = []
+        for item in root.findall("d:response", ns):
+            href = item.find("d:href", ns).text
+            props = item.find("d:propstat/d:prop", ns)
+            link = {
+                "url": urljoin(list_url, href),
+                "is_folder": props.find("d:resourcetype/d:collection", ns) is not None,
+            }
+            if list_url.rstrip("/") == link["url"].rstrip("/"):
+                continue
+            for old_key, new_key in props_mapping.items():
+                v = props.find(f"d:{old_key}", ns)
+                link[new_key] = v.text if v is not None else None
+                if new_key == "size" and link[new_key] is not None:
+                    link[new_key] = int(link[new_key])
+                elif new_key == "updated_at":
+                    link[new_key] = parsedate_to_datetime(link[new_key])
+            arquivos.append(Link(**link))
+        return arquivos
+
+    def pastas(self):
+        links = self.lista_arquivos("Dados/Cadastros/CNPJ/")
+        links.sort(key=lambda link: link.filename, reverse=True)
+        return links
+
+    def links_arquivos_principais(self, data: datetime.date):
+        """Lista de links para os arquivos principais (empresa, estabelecimento, sócio etc.)"""
+        links = self.lista_arquivos(f"Dados/Cadastros/CNPJ/{data.strftime('%Y-%m')}")
+        links.sort(key=lambda link: link.filename, reverse=True)
+        return links
+
+    def links_regime_tributario(self):
+        """Lista de links para regime tributário"""
+        links = [
+            link
+            for link in self.lista_arquivos("Dados/Obrigacoes_Acessorias/ECF")
+            if link.filename.lower().endswith(".zip")
+        ]
+        links.sort(key=lambda link: link.filename, reverse=True)
         return links
 
 
@@ -143,7 +219,7 @@ def main():
     data_selecionada = args.date
     path_pattern = str(args.path_pattern.absolute())
 
-    receita = ReceitaFileFinder(mirror=args.mirror)
+    receita = ReceitaFileFinderNextCloud(mirror=args.mirror)
     datas_disponiveis = list(receita.datas)
     if not data_selecionada:
         data_selecionada = datas_disponiveis[0]
@@ -162,7 +238,10 @@ def main():
     else:
         data_principais = data_selecionada
     links_regime_tributario = list(receita.links_regime_tributario())
-    data_regime_tributario = links_regime_tributario[0].updated_at.strftime("%Y-%m-%d")
+    if len(links_regime_tributario) > 0:
+        data_regime_tributario = links_regime_tributario[0].updated_at.strftime("%Y-%m-%d")
+    else:
+        data_regime_tributario = None
 
     print(f"Data da última extração: {datas_disponiveis[0].strftime('%Y-%m')}")
     print(f"Baixando para data (arquivos principais): {data_selecionada}")
