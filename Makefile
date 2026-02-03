@@ -1,47 +1,59 @@
+ifeq ($(CI),true)
+    DOCKER_EXEC_FLAGS = -T
+else
+    DOCKER_EXEC_FLAGS = -it
+endif
+COMPOSE = docker compose
+COMPOSE_EXEC = $(COMPOSE) exec $(DOCKER_EXEC_FLAGS)
+COMPOSE_RUN = $(COMPOSE) run $(DOCKER_EXEC_FLAGS)
+
 bash:					# Run bash inside `main` container
-	docker compose run --rm -it main bash
+	$(COMPOSE_RUN) --rm main bash
 
 bash-root: 				# Run bash as root inside `main` container
-	docker compose run --rm -itu root main bash
+	$(COMPOSE_RUN) --rm -u root main bash
 
-build: fix-permissions	# Build containers
-	docker compose build
+build: 					# Build containers
+	$(COMPOSE) pull
+	$(COMPOSE) build
 
 clean: stop				# Stop and clean orphan containers
-	docker compose down -v --remove-orphans
-
-fix-permissions:		# Fix volume permissions on host machine
-	userID=$${UID:-1000}
-	groupID=$${UID:-1000}
-	mkdir -p docker/data/main docker/data/db
-	chown -R $$userID:$$groupID docker/data/main docker/data/db
-	touch docker/env/main.local docker/env/db.local
+	$(COMPOSE) down -v --remove-orphans
 
 help:					# List all make commands
 	@awk -F ':.*#' '/^[a-zA-Z_-]+:.*?#/ { printf "\033[36m%-15s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST) | sort
 
 kill:					# Force stop (kill) and remove containers
-	docker compose kill
-	docker compose rm --force
+	$(COMPOSE) kill
+	$(COMPOSE) rm --force
 
 lint:					# Run linter script
 	docker compose run --rm -it main /app/lint.sh
 
+lint-check:				# Run the linter without changing files
+	$(COMPOSE_EXEC) web /app/lint.sh --check
+
 logs:					# Show all containers' logs (tail)
-	docker compose logs -tf
+	$(COMPOSE) logs -tf
 
 psql: 					# Connect to database shell using `main` container
-	docker compose run --rm -it main bash -c "psql \$$DATABASE_URL"
+	$(COMPOSE_RUN) --rm -it main bash -c "psql \$$DATABASE_URL"
 
 restart: stop start		# Stop all containers and start all containers in background
 
 run: 					# Run main ELT pipeline
-	docker compose run --rm -it main bash -c "./run.sh"
+	$(COMPOSE_RUN) --rm -it main bash -c "./run.sh"
 
-start: fix-permissions	# Start all containers in background
-	docker compose up -d
+start:					# Start all containers in background
+	$(COMPOSE) up -d
 
 stop:					# Stop all containers
-	docker compose down
+	$(COMPOSE) down
 
-.PHONY: bash bash-root build clean fix-permissions help kill lint logs psql restart run start stop
+tags:					# Generate tags file for the entire project (requires universal-ctags)
+	@git ls-files | ctags -L - --tag-relative=yes --quiet --append -f "$(TAGS_FILE)"
+
+test:					# Execute `pytest` and coverage report inside `web` container
+	$(COMPOSE_RUN) --rm main bash -c 'pytest $(TEST_ARGS)'
+
+.PHONY: bash bash-root build clean help kill lint lint-check logs psql restart run start stop tags test
