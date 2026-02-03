@@ -1,7 +1,7 @@
 services:
   db:
     user: "${UID:-1000}:${GID:-1000}"
-    image: postgres:16-bookworm
+    image: postgres:17.7-trixie
     env_file:
       - path: "docker/env/db"
         required: true
