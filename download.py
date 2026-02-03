@@ -1,9 +1,8 @@
 import datetime
 import re
 from dataclasses import dataclass
-from itertools import zip_longest
 from pathlib import Path
-from urllib.parse import unquote, urljoin, urlparse, urlsplit
+from urllib.parse import unquote, urljoin, urlparse
 
 import requests
 from lxml.html import document_fromstring
@@ -181,7 +180,9 @@ def main():
         downloads.append(
             Download(
                 url=link.url,
-                filename=path_pattern.format(date=data_principais, filename=f"{data_regime_tributario}_{link.filename}"),
+                filename=path_pattern.format(
+                    date=data_principais, filename=f"{data_regime_tributario}_{link.filename}"
+                ),
             )
         )
     DownloaderClass = subclasses[args.downloader]

@@ -1,4 +1,5 @@
 """Import downloaded data to PostgreSQL"""
+
 import fnmatch
 import io
 import warnings
@@ -78,9 +79,9 @@ class TableConfig:
         progress_bar.total = uncompressed_size
         rows_imported = 0
         for counter, (zf, files_infos) in enumerate(files_to_extract, start=1):
-            progress_bar.prefix = (
-                progress_bar.description
-            ) = f"Importing {self.name} (ZIP {counter}/{len(files_to_extract)})"
+            progress_bar.prefix = progress_bar.description = (
+                f"Importing {self.name} (ZIP {counter}/{len(files_to_extract)})"
+            )
             for file_info in files_infos:
                 # TODO: check if table already exists/has rows before importing?
                 dialect = self.dialect
