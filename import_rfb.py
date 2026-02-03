@@ -18,16 +18,25 @@ class TableConfig:
 
     filename_patterns: str  # Glob pattern for ZIP filename
     schema_filename: str  # Schema filename to use when importing
-    has_header: bool  # Does the CSV file's first line is the header?
     name: str  # Table name to be imported
-    inner_filename_pattern: str = None  # Glob pattern for filename inside ZIP
-    # archive (if not specified, all files in archive are used)
+    has_header: bool | None = None  # Does the CSV file's first line is the header?
+    inner_filename_pattern: str = None  # Glob pattern for filename inside ZIP archive (if not specified, all files in
+    # archive are used)
     encoding: str = "iso-8859-15"  # Encoding for CSV
     dialect: str = "excel-semicolon"  # Dialect for CSV
 
-    @classmethod
-    def get_dialect(cls, filename, fobj):
-        return cls.dialect
+    def get_dialect(self, filename, fobj):
+        if self.dialect is not None:
+            return self.dialect
+        first_line = fobj.readline()
+        if first_line.count(",") > first_line.count(";"):
+            return "excel"
+        return "excel-semicolon"
+
+    def get_has_header(self, filename, fobj):
+        if self.has_header is None:
+            raise NotImplementedError(f"Configuração de cabeçalho (has_header) faltando para {self.__class__.__name__}")
+        return self.has_header
 
     @classmethod
     def subclasses(cls):
@@ -86,9 +95,18 @@ class TableConfig:
                 # TODO: check if table already exists/has rows before importing?
                 dialect = self.dialect
                 if dialect is None:
-                    fobj_dialect = io.TextIOWrapper(zf.open(file_info.filename, mode="r"), encoding=self.encoding)
-                    dialect = self.get_dialect(file_info.filename, fobj_dialect)
-                    fobj_dialect.close()
+                    with zf.open(file_info.filename, mode="r") as tmp_fobj:
+                        dialect = self.get_dialect(
+                            filename=file_info.filename,
+                            fobj=io.TextIOWrapper(tmp_fobj, encoding=self.encoding),
+                        )
+                has_header = self.has_header
+                if has_header is None:
+                    with zf.open(file_info.filename, mode="r") as tmp_fobj:
+                        has_header = self.get_has_header(
+                            filename=file_info.filename,
+                            fobj=io.TextIOWrapper(tmp_fobj, encoding=self.encoding),
+                        )
                 fobj = zf.open(file_info.filename)
                 result = pgcopy.import_from_fobj(
                     fobj=NotNullWrapper(fobj),
@@ -96,7 +114,7 @@ class TableConfig:
                     encoding=self.encoding,
                     dialect=dialect,
                     schema=self.schema,
-                    has_header=self.has_header,
+                    has_header=has_header,
                     unlogged=unlogged,
                     access_method=access_method,
                     callback=progress_bar.update,
@@ -184,18 +202,20 @@ class RegimeTributario(TableConfig):
         "*_Lucro Arbitrado*.zip",
         "*_Lucro Presumido*.zip",  # Pode vir como "Lucro Presumido 1.zip"
         "*_Lucro Real*.zip",
+        "*_entidades-imunes-e-isentas.zip",  # Nome presente no NextCloud, verificado em jan/2026
+        "*_entidades-lucro-arbitrado.zip",  # Nome presente no NextCloud, verificado em jan/2026
+        "*_entidades-lucro-presumido.zip",  # Nome presente no NextCloud, verificado em jan/2026
+        "*_entidades-lucro-real.zip",  # Nome presente no NextCloud, verificado em jan/2026
     )
-    has_header = True
+    has_header = None
     inner_filename_pattern = "*.csv"
     name = "regime_tributario_orig"
     schema_filename = "regime_tributario.csv"
 
-    @classmethod
-    def get_dialect(cls, filename, fobj):
+    def get_has_header(self, filename, fobj):
+        # Se a primeira linha já for um registro, virá com valores contendo ".", "/", "-" (no CNPJ)
         first_line = fobj.readline()
-        if first_line.count(",") > first_line.count(";"):
-            return "excel"
-        return "excel-semicolon"
+        return "." not in first_line
 
 
 if __name__ == "__main__":
