@@ -1,6 +1,5 @@
 services:
   db:
-    user: "${UID:-1000}:${GID:-1000}"
     env_file:
       - path: "docker/env/db"
         required: true
