@@ -3,13 +3,11 @@ CREATE TABLE empresa AS
   SELECT
     e."uuid",
     CASE
-      WHEN codigo_natureza_juridica = 2135 AND TRIM(razao_social) ~ ' [0-9.-]{11,14}$' THEN
-        person_uuid(
-          REGEXP_REPLACE(REGEXP_REPLACE(razao_social, '.* ([0-9.-]{11,14})$', '\1'), '[.-]+', '', 'g'),
-          TRIM(REGEXP_REPLACE(TRIM(razao_social), '[,-]? ?(CPF)? ?(N ?|NO ?)?[:.-]? ?[0-9.-]{11,14}$', ' '))
-        )
+      WHEN p.pessoa_cpf IS NOT NULL THEN person_uuid(p.pessoa_cpf, p.pessoa_nome)
       ELSE NULL
     END AS pessoa_uuid,
+    p.pessoa_cpf,
+    p.pessoa_nome,
 
     e.codigo_natureza_juridica,
     e.codigo_qualificacao_responsavel,
@@ -48,8 +46,18 @@ CREATE TABLE empresa AS
       razao_social IS NOT NULL
       AND codigo_natureza_juridica <> 0
   ) AS e
-    LEFT JOIN municipio_uf AS m
-      ON e.ente_responsavel_uf = m.uf AND e.ente_responsavel_municipio = m.nome;
+  LEFT JOIN LATERAL (
+    SELECT
+      REGEXP_REPLACE(REGEXP_REPLACE(TRIM(e.razao_social), '.* ([0-9.-]{11,14})$', '\1'), '[.-]+', '', 'g') AS pessoa_cpf,
+      TRIM(REGEXP_REPLACE(TRIM(e.razao_social), '[,-]? ?(CPF)? ?(N ?|NO ?)?[:.-]? ?[0-9.-]{11,14}$', ' ')) AS pessoa_nome
+    WHERE
+      e.codigo_natureza_juridica = 2135
+      AND TRIM(e.razao_social) ~ ' [0-9.-]{11,14}$'
+  ) AS p
+    -- Filtra apenas CPFs com 11 dígitos para evitar o uso de CPFs possivelmente incorretos
+    ON p.pessoa_cpf ~ '^[0-9]{11}$' AND p.pessoa_nome <> ''
+  LEFT JOIN municipio_uf AS m
+    ON e.ente_responsavel_uf = m.uf AND e.ente_responsavel_municipio = m.nome;
 
 CREATE INDEX idx_empresa_uuid ON empresa ("uuid");
 CREATE INDEX idx_empresa_mei ON empresa (pessoa_uuid);
